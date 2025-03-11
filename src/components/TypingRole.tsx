@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 export default function TypingText() {
-  const words = ["Aspiring Software Engineer", "Computer Science Student"];
+  const words = ["Aspiring Software Engineer", "Computer Science Student", "This Site is Best Viewed on Desktop!"];
   const [displayText, setDisplayText] = useState("");
   const [wordIndex, setWordIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
