@@ -3,11 +3,11 @@ import { useEffect, useRef, useCallback, useState } from "react";
 
 const FloatingPoints = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const animationRef = useRef(null);
+  const animationRef = useRef<number | null>(null);
   const particlesRef = useRef<{ x: number; y: number; z: number; radius: number }[]>([]);
   const directionRef = useRef({ x: 0, y: 0 });
   const isMouseMovingRef = useRef(false);
-  const mouseMoveTimeout = useRef(null);
+  const mouseMoveTimeout = useRef<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -44,7 +44,7 @@ const FloatingPoints = () => {
     const numParticles = isMobile ? 400 : 700;
     const sizeFactor = isMobile ? 0.55 : 1;
 
-    particlesRef.current = new Array(numParticles).fill().map(() => ({
+    particlesRef.current = new Array(numParticles).fill(null).map(() => ({
       x: (Math.random() - 0.5) * width * 2,
       y: (Math.random() - 0.5) * height * 1.2,
       z: Math.random() * width,
@@ -120,11 +120,15 @@ const FloatingPoints = () => {
 
     animate();
 
-    return () => cancelAnimationFrame(animationRef.current);
+    return () => {
+      if (animationRef.current !== null) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
   }, []);
 
   const handleMouseMove = useCallback(
-    (event) => {
+    (event: MouseEvent) => {
       if (isMobile) return;
 
       const centerX = window.innerWidth / 2;
@@ -133,8 +137,10 @@ const FloatingPoints = () => {
       directionRef.current.y += ((event.clientY - centerY) * 0.01 - directionRef.current.y) * 0.3;
       isMouseMovingRef.current = true;
 
-      clearTimeout(mouseMoveTimeout.current);
-      mouseMoveTimeout.current = setTimeout(() => {
+      if (mouseMoveTimeout.current !== null) {
+        clearTimeout(mouseMoveTimeout.current);
+      }
+      mouseMoveTimeout.current = window.setTimeout(() => {
         isMouseMovingRef.current = false;
       }, 50);
     },

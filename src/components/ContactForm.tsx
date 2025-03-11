@@ -62,7 +62,7 @@ export default function ContactForm() {
                onChange={handleChange} required 
                className="flex-1 min-w-[200px] bg-transparent border border-gray-600 p-2 text-black rounded" />
       </div>
-      <textarea name="message" placeholder="Message" rows="5" value={formData.message} 
+      <textarea name="message" placeholder="Message" rows={5} value={formData.message} 
                 onChange={handleChange} required 
                 className="w-full bg-transparent border border-gray-600 p-2 text-black rounded" />
       <button type="submit" className="bg-gray-800 px-6 py-2 text-white border border-gray-600 hover:bg-gray-700 rounded">
