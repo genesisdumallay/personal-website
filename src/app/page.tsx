@@ -21,7 +21,7 @@ export default function Home() {
     setIsDarkMode(newValue);
   };
 
-  const [hoveredIcon, setHoveredIcon] = useState(null);
+  const [hoveredIcon, setHoveredIcon] = useState<string | null>(null);
   const iconStyle = { color: isDark? "f2f2f2" : "#555", size: "1.5rem" };
 
   return (
