@@ -39,7 +39,7 @@ export default function ContactForm() {
       <p><strong>Email:</strong> <a href="mailto:your@email.com">gmdumallay007101@gmail.com</a></p>
       <p><strong>Phone:</strong> +63 977 736 4652</p>
       <p className="mt-4">
-        Got something to say? I'll answer as soon as possible.
+        Got something to say? I&apos;ll answer as soon as possible.
       </p>
     </div>
     <form onSubmit={handleSubmit} className="space-y-4 w-full">

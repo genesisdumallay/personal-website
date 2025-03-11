@@ -150,7 +150,7 @@ export default function Home() {
                 wordBreak: "break-word",
               }}
             >
-              Hello! I am Genesis,  and currently pursuing a Bachelor's in Computer Science at FEU Institute of Technology. I'm an aspiring
+              Hello! I am Genesis,  and currently pursuing a Bachelor&apos;s in Computer Science at FEU Institute of Technology. I&apos;m an aspiring
               software engineer, certified in Java, Python, CCNA, and DevNet. With some experience in both front-end and
               back-end development, with a particular focus in back-end work. However, I enjoy full-stack
               development and am always open to learning and contributing to both ends of the stack.
