@@ -2,7 +2,18 @@
 import { useState } from "react";
 
 export default function ContactForm() {
-  const [formData, setFormData] = useState({ name: "", email: "", message: "" });
+  interface FormData {
+    name: string;
+    email: string;
+    message: string;
+  }
+  
+  const [formData, setFormData] = useState<FormData>({
+    name: "",
+    email: "",
+    message: "",
+  });
+  // const [formData, setFormData] = useState({ name: "", email: "", message: "" });
   const [status, setStatus] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
