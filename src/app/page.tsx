@@ -56,7 +56,7 @@ export default function Home() {
           {[
             { id: "email", icon: <FaEnvelope {...iconStyle} />, label: "Email Me", link: "#contact-section" },
             { id: "github", icon: <FaGithub {...iconStyle} />, label: "GitHub", link: "https://github.com/genesisdumallay" },
-            { id: "linkedin", icon: <FaLinkedin {...iconStyle} />, label: "LinkedIn", link: "www.linkedin.com/in/genesis-dumallay-565398356" },
+            { id: "linkedin", icon: <FaLinkedin {...iconStyle} />, label: "LinkedIn", link: "https://www.linkedin.com/in/genesis-dumallay-565398356" },
             { id: "resume", icon: <FaFileAlt {...iconStyle} />, label: "Download Resume", link: "Dumallay, Genesis M..pdf" }
           ].map(({ id, icon, label, link }) => (
             <div
