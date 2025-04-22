@@ -8,7 +8,6 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/",
-        destination: "https://edith.feutech.edu.ph/briefcase/profile/genesisdumallay",
         permanent: true,
       },
     ];
