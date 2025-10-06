@@ -1,183 +1,89 @@
 "use client";
 import { useState } from "react";
-import { Inter } from "next/font/google";
 import TypingText from "@/components/TypingRole";
 import ContactForm from "@/components/ContactForm";
 import FloatingPoints from "@/components/FloatingPoints";
 import FloatingPointsDark from "@/components/FloatingPointsDark";
 import { getIsDarkMode, setIsDarkMode } from "../../stateContext/GlobalState.js";
-import { FaGithub, FaLinkedin, FaEnvelope, FaFileAlt, FaMoon, FaSun } from "react-icons/fa";
-
-
-
-const inter = Inter({ subsets: ["latin"], weight: ["300", "400", "600"] });
+import { FaEnvelope, FaFileAlt, FaGithub, FaLinkedin, FaMoon, FaSun, FaUser } from "react-icons/fa";
+import InputBar from "@/components/InputBar";
+import ChatWindow from "@/components/chatWindow";
 
 export default function Home() {
   const [isDark, setIsDark] = useState(getIsDarkMode());
+  const [toggleChat, setToggleChat] = useState(false);
+  const [typingText, setTypingText] = useState("");
 
   const toggleDarkMode = () => {
-    const newValue = !isDark;
-    setIsDark(newValue);
-    setIsDarkMode(newValue);
+    const v = !isDark;
+    setIsDark(v);
+    setIsDarkMode(v);
   };
 
-  const [hoveredIcon, setHoveredIcon] = useState<string | null>(null);
-  const iconStyle = { color: isDark? "f2f2f2" : "#555", size: "1.5rem" };
+  const [hovered, setHovered] = useState<string | null>(null);
+
+  const iconStyle = { size: 20 };
 
   return (
-    <main className={inter.className} style={{ margin: "0", padding: "0", position: "relative", minHeight: "100vh" }}>
-      <div className="absolute top-0 left-0 w-full h-full -z-10">
-  {isDark ? <FloatingPointsDark /> : <FloatingPoints />}
-</div>
+    <main className="relative min-h-screen font-sans">
+      <div className="absolute inset-0 -z-10">{isDark ? <FloatingPointsDark /> : <FloatingPoints />}</div>
 
-      {/* Nav Bar */}
-      <nav
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100%",
-          display: "flex",
-          justifyContent: "flex-end",
-          padding: "1rem 10vw",
-          background: "rgba(255, 255, 255, 0.05)",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-          boxShadow: "0px 2px 10px rgba(0, 0, 0, 0.05)",
-          zIndex: 1000,
-        }}
-      >
-        <div style={{ display: "flex", gap: "2.5rem", alignItems: "center" }}>
-          {/* Dark Mode Toggle */}
-          <div onClick={toggleDarkMode} style={{ cursor: "pointer" }}>
+
+      <div className="flex items-center justify-center gap-6 border rounded w-max mx-auto p-2 mt-2 border-gray-300">
+          <button onClick={toggleDarkMode} aria-label="toggle theme" className="p-1">
             {isDark ? <FaSun {...iconStyle} /> : <FaMoon {...iconStyle} />}
-          </div>
+          </button>
 
           {[
-            { id: "email", icon: <FaEnvelope {...iconStyle} />, label: "Email Me", link: "#contact-section" },
-            { id: "github", icon: <FaGithub {...iconStyle} />, label: "GitHub", link: "https://github.com/genesisdumallay" },
-            { id: "linkedin", icon: <FaLinkedin {...iconStyle} />, label: "LinkedIn", link: "https://www.linkedin.com/in/genesis-dumallay-565398356" },
-            { id: "resume", icon: <FaFileAlt {...iconStyle} />, label: "Download Resume", link: "Dumallay, Genesis M..pdf" }
-          ].map(({ id, icon, label, link }) => (
-            <div
-              key={id}
-              onMouseEnter={() => setHoveredIcon(id)}
-              onMouseLeave={() => setHoveredIcon(null)}
-              onClick={() => setHoveredIcon(null)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: hoveredIcon === id ? "0.75rem" : "0rem",
-                transition: "gap 0.2s ease-in-out",
-              }}
+            { id: "email", icon: <FaEnvelope {...iconStyle} />, link: "#contact-section", label: "Email" },
+            { id: "github", icon: <FaGithub {...iconStyle} />, link: "https://github.com/genesisdumallay", label: "GitHub" },
+            { id: "linkedin", icon: <FaLinkedin {...iconStyle} />, link: "https://www.linkedin.com/in/genesis-dumallay-565398356", label: "LinkedIn" },
+            { id: "resume", icon: <FaFileAlt {...iconStyle} />, link: "/Dumallay, Genesis M..pdf", label: "Resume" },
+            { id: "aboutme", icon: <FaUser {...iconStyle} />, link: "#aboutme-section", label: "About Me" }
+          ].map((it) => (
+            <a
+              key={it.id}
+              href={it.link}
+              onMouseEnter={() => setHovered(it.id)}
+              onMouseLeave={() => setHovered(null)}
+              className="flex items-center gap-2"
             >
-              {hoveredIcon === id && (
-                <span
-                  style={{
-                    fontWeight: "bold",
-                    color: isDark ? "#dbd9d9" : "#555",
-                    fontSize: "1.1rem",
-                    whiteSpace: "nowrap",
-                    opacity: 1,
-                    transition: "opacity 0.2s ease-in-out",
-                  }}
-                >
-                  {label}
-                </span>
-              )}
-              <a href={link || "#"} target={link?.startsWith("#") ? "_self" : "_blank"} rel="noopener noreferrer">
-                {icon}
-              </a>
-            </div>
+              {hovered === it.id && <span className="text-sm">{it.label}</span>}
+              <span>{it.icon}</span>
+            </a>
           ))}
-        </div>
-      </nav>
 
-      <style jsx global>{`
-        html {
-          scroll-behavior: smooth;
-        }
-      `}</style>
-
-      {/* Content Wrapper */}
-      <div style={{ position: "relative", zIndex: 1, paddingTop: "5rem" }}>
-        {/* About Me Section */}
-        <section
-          style={{
-            minHeight: "80vh",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "2rem",
-            color: isDark ? "#d2d2d2" : "#333333",
-          }}
-        >
-          <div
-            style={{
-              width: "clamp(45ch, 60%, 75ch)",
-              textAlign: "left",
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.75rem",
+          <button
+            className="border-l px-3 py-1 hover:bg-gray-200"
+            onClick={async () => {
+              setToggleChat(true);
             }}
           >
-            <h1
-              style={{
-                fontWeight: "bold",
-                fontSize: "clamp(2.5rem, 5vw, 3.5rem)",
-                marginTop: "10vh",
-              }}
-            >
-              Genesis Dumallay
-            </h1>
-            <TypingText />
-            <h2
-              style={{
-                fontWeight: 600,
-                fontSize: "clamp(1.5rem, 3vw, 2.0rem)",
-                marginTop: "clamp(4rem, 5vw, 4rem)",
-                marginBottom: "clamp(1rem, 5vw, 1rem)",
-              }}
-            >
-              About Me
-            </h2>
-            <p
-              style={{
-                fontWeight: 500,
-                lineHeight: "1.8",
-                textAlign: "justify",
-                textWrap: "balance",
-                wordBreak: "break-word",
-              }}
-            >
-              Hello! I am Genesis,  and currently pursuing a Bachelor&apos;s in Computer Science at FEU Institute of Technology. I&apos;m an aspiring
-              software engineer, certified in Java, Python, CCNA, and DevNet. With some experience in both front-end and
-              back-end development, with a particular focus in back-end work. However, I enjoy full-stack
-              development and am always open to learning and contributing to both ends of the stack.
-            </p>
-            <p
-              style={{
-                fontWeight: 500,
-                lineHeight: "1.8",
-                textAlign: "justify",
-                textWrap: "balance",
-                marginTop: "3vh",
-                marginBottom: "16.5vh",
-                wordBreak: "break-word",
-              }}
-            >
-              I have a particular interest in software automation, making software solutions for repetitive tasks, saving
-              time and resources, and increasing efficiency. I also have a particular interest in analyzing data and artificial
-              intelligence, and aspire to develop technologies that enhance human-computer interaction and decision-making.
-            </p>
+            Chat
+          </button>
+        </div>
+
+
+
+      <div className="pt-20 px-6">
+
+        <section className={`min-h-[60vh] flex items-center justify-center ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
+          
+
+          {toggleChat && <ChatWindow toggleChat={setToggleChat} />}
+
+          <div className="max-w-4xl">
+            <h1 className="text-4xl font-bold">Genesis Dumallay</h1>
+            
+            <TypingText onChange={(t: string) => setTypingText(t)} />
+            <InputBar placeholder={typingText || "Type here..."} isDark={isDark} setToggleChat={setToggleChat}/>
           </div>
         </section>
-      </div>
 
-      <div id="contact-section" className={isDark ? "force-white dark-buttons" : "force-black light-buttons"}>
-        <ContactForm />
+        <section id="contact-section" className="py-12 flex justify-center">
+          <ContactForm isDark={isDark} />
+        </section>
       </div>
-
     </main>
   );
 }
