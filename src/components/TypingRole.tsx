@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 
 export default function TypingText({ onChange }: { onChange?: (text: string) => void }) {
-  const words = useMemo(() => ["Aspiring Software Engineer", "Computer Science Student"], []);
+  const words = useMemo(() => ["Chat with my helper about myself!", "Summarize information about Genesis"], []);
   const [displayText, setDisplayText] = useState("");
   const [wordIndex, setWordIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
