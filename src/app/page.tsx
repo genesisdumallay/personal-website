@@ -23,7 +23,6 @@ export default function Home() {
     setIsDarkMode(v);
   };
 
-  // keep document root class in sync so Tailwind's `dark:` utilities work
   useEffect(() => {
     const root = document.documentElement;
     if (isDark) root.classList.add("dark");

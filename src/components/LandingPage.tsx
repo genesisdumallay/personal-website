@@ -24,7 +24,7 @@ const LandingPage = ({
         isDark ? "text-gray-200" : "text-gray-900"
       }`}
     >
-      {toggleChat && <ChatWindow toggleChat={setToggleChat} />}
+      {toggleChat && <ChatWindow toggleChat={setToggleChat} isDark={isDark} />}
 
       <div className="max-w-4xl">
         <h1 className="text-4xl font-bold text-center">Genesis Dumallay</h1>
