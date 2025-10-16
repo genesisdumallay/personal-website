@@ -6,20 +6,18 @@ interface HeaderProps {
   toggleDarkMode: () => void;
   setIsDark: (isDark: boolean) => void;
   setToggleChat: (v: boolean) => void;
-  setShowAbout?: (v: boolean) => void;
 }
 
-const Header = ({
-  isDark,
-  toggleDarkMode,
-  setToggleChat,
-  setShowAbout,
-}: HeaderProps) => {
+const Header = ({ isDark, toggleDarkMode, setToggleChat }: HeaderProps) => {
   const iconStyle = { size: 20 };
   const [hovered, setHovered] = useState<string | null>(null);
 
   return (
-    <div className="flex flex-row gap-2">
+    <div
+      className={`${
+        isDark ? "text-gray-200" : "text-gray-900"
+      } flex flex-row gap-2`}
+    >
       <div className="flex items-center justify-center gap-6 border rounded w-max p-2 mt-3 border-gray-300 ml-auto">
         {/* Visible toggle switch for light/dark mode */}
         <div className="flex items-center gap-2">
@@ -67,19 +65,30 @@ const Header = ({
             {
               id: "aboutme",
               icon: <FaUser {...iconStyle} />,
-              link: "#aboutme-section",
+              link: "#about-me-section",
               label: "About Me",
               onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
-                // prevent default anchor jump and instead use client-side render toggle
                 e.preventDefault();
-                setShowAbout?.(true);
+
+                const section = document.querySelector("#about-me-section");
+                if (section) {
+                  section.scrollIntoView({ behavior: "smooth" });
+                }
               },
             },
             {
-              id: "projects",
+              id: "experience",
               icon: <FaTerminal {...iconStyle} />,
-              link: "#projects-section",
-              label: "Projects",
+              link: "#experience-section",
+              label: "Experience",
+              onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
+                e.preventDefault();
+
+                const section = document.querySelector("#experience-section");
+                if (section) {
+                  section.scrollIntoView({ behavior: "smooth" });
+                }
+              },
             },
           ] as Array<{
             id: string;
@@ -120,7 +129,9 @@ const Header = ({
         })}
 
         <button
-          className="border-l px-3 py-1 hover:bg-gray-200"
+          className={`border-l px-3 py-1 hover:bg-gray-200 ${
+            isDark ? "text-gray-200" : "text-gray-900"
+          }`}
           onClick={async () => {
             setToggleChat(true);
           }}

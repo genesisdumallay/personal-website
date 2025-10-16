@@ -3,11 +3,19 @@
 import { useState } from "react";
 import { FaEnvelope, FaGithub, FaLinkedin } from "react-icons/fa";
 
-const Footer = () => {
+interface FooterProps {
+  isDark?: boolean;
+}
+
+const Footer = ({ isDark }: FooterProps) => {
   const [hovered, setHovered] = useState<string | null>(null);
   const iconStyle = { size: 20 };
   return (
-    <div className="flex items-center justify-center gap-6 w-max mx-auto p-2 mt-2 border-t border-gray-400">
+    <div
+      className={`${
+        isDark ? "text-gray-200" : "text-gray-900"
+      } flex items-center justify-center gap-6 w-max mx-auto p-2 mt-2 border-t border-gray-400`}
+    >
       {[
         {
           id: "email",
