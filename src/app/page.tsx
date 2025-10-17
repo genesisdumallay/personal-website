@@ -35,12 +35,20 @@ export default function Home() {
         {isDark ? <FloatingPointsDark /> : <FloatingPoints />}
       </div>
 
-      <Header
-        isDark={isDark}
-        toggleDarkMode={toggleDarkMode}
-        setIsDark={setIsDark}
-        setToggleChat={setToggleChat}
-      />
+      <header
+        className={`sticky top-0 left-0 right-0 z-50 backdrop-blur-sm ${
+          isDark ? "bg-gray-900/60" : "bg-white/60"
+        }`}
+      >
+        <div className="px-6 pt-3">
+          <Header
+            isDark={isDark}
+            toggleDarkMode={toggleDarkMode}
+            setIsDark={setIsDark}
+            setToggleChat={setToggleChat}
+          />
+        </div>
+      </header>
 
       <div className="pt-20 px-6">
         <section id="landing-page-section" className="mt-20">
@@ -54,21 +62,23 @@ export default function Home() {
           ></LandingPage>
         </section>
 
-        <section id="about-me-section" className="mt-80">
-          <AboutMe isDark={isDark} />
-        </section>
+        <div className="bg-transparent backdrop-blur">
+          <section id="about-me-section" className="mt-80">
+            <AboutMe isDark={isDark} />
+          </section>
 
-        <section id="experience-section" className="mt-80">
-          <Experience isDark={isDark} />
-        </section>
+          <section id="experience-section" className="mt-80">
+            <Experience isDark={isDark} />
+          </section>
 
-        <section
-          id="contact-section"
-          className="fixed bottom-0 left-0 right-0 mt-30 mb-5 flex justify-center"
-        >
-          <Footer isDark={isDark}></Footer>
-          {/* <ContactForm isDark={isDark} /> */}
-        </section>
+          <section
+            id="contact-section"
+            className="mt-30 mb-5 flex justify-center"
+          >
+            <Footer isDark={isDark}></Footer>
+            {/* <ContactForm isDark={isDark} /> */}
+          </section>
+        </div>
       </div>
     </main>
   );
