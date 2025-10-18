@@ -1,22 +1,22 @@
 import React from "react";
 import { useInputBar } from "@/hooks/InputBarContext";
+import { useTheme } from "@/hooks/ThemeContext";
 
 interface searchBarProps {
   setToggleChat?: (v: boolean) => void;
-  isDark: boolean;
   placeholder?: string;
   onSend?: (v: string) => void;
   className?: string;
 }
 
 const InputBar = ({
-  isDark,
   setToggleChat,
   placeholder,
   onSend,
   className,
 }: searchBarProps) => {
   const { value, setValue } = useInputBar();
+  const { isDark } = useTheme();
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {

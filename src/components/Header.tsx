@@ -1,14 +1,13 @@
 import React, { useState } from "react";
+import { useTheme } from "@/hooks/ThemeContext";
 import { FaFileAlt, FaMoon, FaSun, FaUser, FaTerminal } from "react-icons/fa";
 
 interface HeaderProps {
-  isDark: boolean;
-  toggleDarkMode: () => void;
-  setIsDark: (isDark: boolean) => void;
   setToggleChat: (v: boolean) => void;
 }
 
-const Header = ({ isDark, toggleDarkMode, setToggleChat }: HeaderProps) => {
+const Header = ({ setToggleChat }: HeaderProps) => {
+  const { isDark, toggleDark } = useTheme();
   const iconStyle = { size: 20 };
   const [hovered, setHovered] = useState<string | null>(null);
 
@@ -22,7 +21,7 @@ const Header = ({ isDark, toggleDarkMode, setToggleChat }: HeaderProps) => {
         {/* Visible toggle switch for light/dark mode */}
         <div className="flex items-center gap-2">
           <button
-            onClick={toggleDarkMode}
+            onClick={toggleDark}
             aria-pressed={isDark}
             className={`relative inline-flex items-center h-6 rounded-full w-12 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 ${
               isDark ? "bg-gray-600" : "bg-gray-300"

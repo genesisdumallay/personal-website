@@ -2,31 +2,34 @@ import ChatWindow from "./chatWindow";
 import TypingText from "./TypingRole";
 import InputBar from "./InputBar";
 
+import { useTheme } from "@/hooks/ThemeContext";
+
 interface LandingPageProps {
-  isDark: boolean;
   toggleChat: boolean;
   typingText: string;
   setToggleChat: (v: boolean) => void;
-  setIsDark: (isDark: boolean) => void;
   setTypingText: (t: string) => void;
 }
 
 const LandingPage = ({
-  isDark,
   toggleChat,
   typingText,
   setToggleChat,
   setTypingText,
 }: LandingPageProps) => {
+  const { isDark } = useTheme();
   return (
     <div
       className={`flex items-center justify-center ${
         isDark ? "text-gray-200" : "text-gray-900"
       }`}
     >
-      {toggleChat && <ChatWindow toggleChat={setToggleChat} isDark={isDark} />}
+      {toggleChat && <ChatWindow toggleChat={setToggleChat} />}
 
       <div className="w-full max-w-[45rem] mx-auto px-4">
+        <h1 className="text-4xl font-semibold text-center mb-5">
+          IN DEVELOPMENT
+        </h1>
         <h1 className="text-4xl font-semibold text-center">
           Hi, I&#39;m Genesis!
         </h1>
@@ -39,7 +42,6 @@ const LandingPage = ({
         <TypingText onChange={(t: string) => setTypingText(t)} />
         <InputBar
           placeholder={typingText || "Type here..."}
-          isDark={isDark}
           setToggleChat={setToggleChat}
           className="mx-auto block"
         />

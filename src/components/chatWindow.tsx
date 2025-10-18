@@ -3,15 +3,16 @@ import ChatBubble from "@/components/ChatBubble";
 import runGroq from "@/actions/GroqClient";
 import { useEffect, useRef, useState } from "react";
 import { useInputBar } from "@/hooks/InputBarContext";
+import { useTheme } from "@/hooks/ThemeContext";
 
 interface ChatWindowProps {
   toggleChat: (v: boolean) => void;
-  isDark?: boolean;
 }
 
 type Message = { role: "user" | "assistant" | "system"; content: string };
 
-const ChatWindow = ({ toggleChat, isDark = false }: ChatWindowProps) => {
+const ChatWindow = ({ toggleChat }: ChatWindowProps) => {
+  const { isDark } = useTheme();
   const [messages, setMessages] = useState<Message[]>([]);
   const { value, setValue } = useInputBar();
   const [loading, setLoading] = useState(false);
@@ -136,7 +137,6 @@ const ChatWindow = ({ toggleChat, isDark = false }: ChatWindowProps) => {
 
           <div className="pt-2">
             <InputBar
-              isDark={isDark}
               onSend={sendMessage}
               placeholder="Type a message and press Enter"
             />

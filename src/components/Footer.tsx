@@ -1,13 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useTheme } from "@/hooks/ThemeContext";
 import { FaEnvelope, FaGithub, FaLinkedin } from "react-icons/fa";
 
-interface FooterProps {
-  isDark?: boolean;
-}
-
-const Footer = ({ isDark }: FooterProps) => {
+const Footer = () => {
+  const { isDark } = useTheme();
   const [hovered, setHovered] = useState<string | null>(null);
   const iconStyle = { size: 20 };
   return (

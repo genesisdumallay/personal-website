@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useTheme } from "@/hooks/ThemeContext";
 
 interface FormData {
   name: string;
@@ -7,11 +8,18 @@ interface FormData {
   message: string;
 }
 
-export default function ContactForm({ isDark }: { isDark?: boolean }) {
-  const [formData, setFormData] = useState<FormData>({ name: "", email: "", message: "" });
+export default function ContactForm() {
+  const { isDark } = useTheme();
+  const [formData, setFormData] = useState<FormData>({
+    name: "",
+    email: "",
+    message: "",
+  });
   const [status, setStatus] = useState<string | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -46,11 +54,20 @@ export default function ContactForm({ isDark }: { isDark?: boolean }) {
         <div className="mb-6">
           <h3 className="text-2xl mb-2">Get in touch</h3>
           <p>
-            <strong>Email:</strong>{' '}
-            <a className="text-blue-500 underline" href="mailto:gmdumallay007101@gmail.com">gmdumallay007101@gmail.com</a>
+            <strong>Email:</strong>{" "}
+            <a
+              className="text-blue-500 underline"
+              href="mailto:gmdumallay007101@gmail.com"
+            >
+              gmdumallay007101@gmail.com
+            </a>
           </p>
-          <p><strong>Phone:</strong> +63 977 736 4652</p>
-          <p className="mt-4">Got something to say? I&apos;ll answer as soon as possible.</p>
+          <p>
+            <strong>Phone:</strong> +63 977 736 4652
+          </p>
+          <p className="mt-4">
+            Got something to say? I&apos;ll answer as soon as possible.
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 w-full">
@@ -62,7 +79,11 @@ export default function ContactForm({ isDark }: { isDark?: boolean }) {
               value={formData.name}
               onChange={handleChange}
               required
-              className={`flex-1 min-w-[200px] bg-transparent border p-2 rounded ${isDark ? 'border-gray-600 text-gray-100' : 'border-gray-400 text-gray-900'}`}
+              className={`flex-1 min-w-[200px] bg-transparent border p-2 rounded ${
+                isDark
+                  ? "border-gray-600 text-gray-100"
+                  : "border-gray-400 text-gray-900"
+              }`}
             />
 
             <input
@@ -72,7 +93,11 @@ export default function ContactForm({ isDark }: { isDark?: boolean }) {
               value={formData.email}
               onChange={handleChange}
               required
-              className={`flex-1 min-w-[200px] bg-transparent border p-2 rounded ${isDark ? 'border-gray-600 text-gray-100' : 'border-gray-400 text-gray-900'}`}
+              className={`flex-1 min-w-[200px] bg-transparent border p-2 rounded ${
+                isDark
+                  ? "border-gray-600 text-gray-100"
+                  : "border-gray-400 text-gray-900"
+              }`}
             />
           </div>
 
@@ -83,16 +108,29 @@ export default function ContactForm({ isDark }: { isDark?: boolean }) {
             value={formData.message}
             onChange={handleChange}
             required
-            className={`w-full bg-transparent border p-2 rounded ${isDark ? 'border-gray-600 text-gray-100' : 'border-gray-400 text-gray-900'}`}
+            className={`w-full bg-transparent border p-2 rounded ${
+              isDark
+                ? "border-gray-600 text-gray-100"
+                : "border-gray-400 text-gray-900"
+            }`}
           />
 
-          <button type="submit" className={`px-6 py-2 rounded ${isDark ? 'bg-gray-200 text-black' : 'bg-gray-800 text-white'}`}>
+          <button
+            type="submit"
+            className={`px-6 py-2 rounded ${
+              isDark ? "bg-gray-200 text-black" : "bg-gray-800 text-white"
+            }`}
+          >
             Send
           </button>
 
           {status && (
-            <p className={`mt-2 text-sm ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
-              {status === 'loading' ? 'Sending...' : status}
+            <p
+              className={`mt-2 text-sm ${
+                isDark ? "text-gray-100" : "text-gray-900"
+              }`}
+            >
+              {status === "loading" ? "Sending..." : status}
             </p>
           )}
         </form>
