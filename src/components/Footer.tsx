@@ -1,6 +1,4 @@
-"use client";
-
-import { useState } from "react";
+import React, { useState } from "react";
 import { useTheme } from "@/hooks/ThemeContext";
 import { FaEnvelope, FaGithub, FaLinkedin } from "react-icons/fa";
 
@@ -8,6 +6,7 @@ const Footer = () => {
   const { isDark } = useTheme();
   const [hovered, setHovered] = useState<string | null>(null);
   const iconStyle = { size: 20 };
+
   return (
     <div
       className={`${
@@ -18,7 +17,7 @@ const Footer = () => {
         {
           id: "email",
           icon: <FaEnvelope {...iconStyle} />,
-          link: "#contact-section",
+          link: "",
           label: "Email",
         },
         {
@@ -33,26 +32,48 @@ const Footer = () => {
           link: "https://www.linkedin.com/in/genesis-dumallay-565398356",
           label: "LinkedIn",
         },
-      ].map((it) => (
-        <a
-          key={it.id}
-          href={it.link}
-          onMouseEnter={() => setHovered(it.id)}
-          onMouseLeave={() => setHovered(null)}
-          className="flex items-center gap-2"
-        >
-          {hovered === "email"
-            ? true
-            : hovered === it.id && <span className="text-sm">{it.label}</span>}
-          {it.id === "email" ? (
-            <span className="border p-1 px-2 rounded flex items-center gap-1">
-              {it.icon} Get in Touch
+      ].map((it) => {
+        if (it.id === "email") {
+          return (
+            <a
+              key={it.id}
+              href={`mailto:gdumallay007101@gmail.com`}
+              className="flex items-center"
+            >
+              <span className="border border-gray-500 p-1 rounded flex items-center gap-1 ml-2">
+                <span className="px-1">{it.icon}</span>
+                <span className="ml-1">gdumallay007101@gmail.com</span>
+              </span>
+            </a>
+          );
+        }
+
+        const isHovered = hovered === it.id;
+        return (
+          <a
+            key={it.id}
+            href={it.link}
+            onMouseEnter={() => setHovered(it.id)}
+            onMouseLeave={() => setHovered(null)}
+            className="flex items-center"
+          >
+            <span
+              className="text-sm inline-block overflow-hidden transition-all duration-300 ease-out"
+              style={{
+                maxWidth: isHovered ? "120px" : "0px",
+                opacity: isHovered ? 1 : 0,
+                transform: `translateX(${isHovered ? 0 : -4}px)`,
+                whiteSpace: "nowrap",
+              }}
+              aria-hidden={!isHovered}
+            >
+              {it.label}
             </span>
-          ) : (
-            <span>{it.icon}</span>
-          )}
-        </a>
-      ))}
+
+            <span className={isHovered ? "ml-2" : "ml-0"}>{it.icon}</span>
+          </a>
+        );
+      })}
     </div>
   );
 };

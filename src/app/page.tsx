@@ -27,6 +27,7 @@ export default function Home() {
       </header>
 
       <div className="pt-20 px-6">
+        {/* <div className="backdrop-blur-[2px] bg-white/10 dark:bg-black/20"> */}
         <section id="landing-page-section" className="mt-20">
           <LandingPage
             toggleChat={toggleChat}
@@ -35,6 +36,7 @@ export default function Home() {
             setTypingText={setTypingText}
           ></LandingPage>
         </section>
+        {/* </div> */}
 
         <div className="bg-transparent backdrop-blur">
           <section id="about-me-section" className="mt-80">

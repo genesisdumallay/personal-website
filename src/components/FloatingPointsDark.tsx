@@ -4,7 +4,9 @@ import { useEffect, useRef, useCallback, useState } from "react";
 const FloatingPoints = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationRef = useRef<number | null>(null);
-  const particlesRef = useRef<{ x: number; y: number; z: number; radius: number }[]>([]);
+  const particlesRef = useRef<
+    { x: number; y: number; z: number; radius: number }[]
+  >([]);
   const directionRef = useRef({ x: 0, y: 0 });
   const isMouseMovingRef = useRef(false);
   const mouseMoveTimeout = useRef<number | null>(null);
@@ -14,9 +16,8 @@ const FloatingPoints = () => {
     const detectMobile = () => {
       const userAgent = navigator.userAgent.toLowerCase();
       const mobileDetected =
-        /android|iphone|ipad|opera mini|mobile/i.test(
-          userAgent
-        ) || navigator.maxTouchPoints > 0;
+        /android|iphone|ipad|opera mini|mobile/i.test(userAgent) ||
+        navigator.maxTouchPoints > 0;
       setIsMobile(mobileDetected);
     };
     detectMobile();
@@ -62,15 +63,17 @@ const FloatingPoints = () => {
     if (!ctx) return;
 
     const animate = () => {
-      ctx.fillStyle = "#15131a";
+      ctx.fillStyle = "#1e2030";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       const { x: dirX, y: dirY } = directionRef.current;
       const speed = isMouseMovingRef.current ? 0.2 : 1;
       const angleX = dirX * 0.05 * speed;
       const angleY = dirY * 0.1 * speed;
-      const cosX = Math.cos(angleX), sinX = Math.sin(angleX);
-      const cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+      const cosX = Math.cos(angleX),
+        sinX = Math.sin(angleX);
+      const cosY = Math.cos(angleY),
+        sinY = Math.sin(angleY);
 
       for (const p of particlesRef.current) {
         if (isMouseMovingRef.current) {
@@ -96,9 +99,17 @@ const FloatingPoints = () => {
         let size = Math.max(p.radius * scale, 0.1);
         if (p.z > canvas.width * 0.4) size *= 1.5;
 
-        if (!isFinite(screenX) || !isFinite(screenY) || !isFinite(size)) continue;
+        if (!isFinite(screenX) || !isFinite(screenY) || !isFinite(size))
+          continue;
 
-        const gradient = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, size * 2);
+        const gradient = ctx.createRadialGradient(
+          screenX,
+          screenY,
+          0,
+          screenX,
+          screenY,
+          size * 2
+        );
         gradient.addColorStop(0, "rgba(200, 200, 200, 0.8)");
         gradient.addColorStop(0.2, "rgba(150, 180, 200, 0.6)");
         gradient.addColorStop(1, "rgba(50, 50, 100, 0)");
@@ -125,8 +136,10 @@ const FloatingPoints = () => {
       if (isMobile) return;
       const centerX = window.innerWidth / 2;
       const centerY = window.innerHeight / 3;
-      directionRef.current.x += ((event.clientX - centerX) * 0.005 - directionRef.current.x) * 0.3;
-      directionRef.current.y += ((event.clientY - centerY) * 0.01 - directionRef.current.y) * 0.3;
+      directionRef.current.x +=
+        ((event.clientX - centerX) * 0.005 - directionRef.current.x) * 0.3;
+      directionRef.current.y +=
+        ((event.clientY - centerY) * 0.01 - directionRef.current.y) * 0.3;
       isMouseMovingRef.current = true;
 
       if (mouseMoveTimeout.current !== null) {
@@ -155,7 +168,7 @@ const FloatingPoints = () => {
         height: "100vh",
         pointerEvents: "none",
         zIndex: "-10",
-        background: "#15131a"
+        background: "#1e2030",
       }}
     />
   );

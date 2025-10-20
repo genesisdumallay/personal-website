@@ -71,7 +71,10 @@ const Header = ({ setToggleChat }: HeaderProps) => {
 
                 const section = document.querySelector("#about-me-section");
                 if (section) {
-                  section.scrollIntoView({ behavior: "smooth" });
+                  section.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                  });
                 }
               },
             },
@@ -85,7 +88,10 @@ const Header = ({ setToggleChat }: HeaderProps) => {
 
                 const section = document.querySelector("#experience-section");
                 if (section) {
-                  section.scrollIntoView({ behavior: "smooth" });
+                  section.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                  });
                 }
               },
             },
@@ -107,7 +113,6 @@ const Header = ({ setToggleChat }: HeaderProps) => {
               onClick={(e) => it.onClick && it.onClick(e)}
               className="flex items-center"
             >
-              {/* Always render the label span so we can animate it smoothly. Use overflow-hidden and maxWidth animation to avoid layout jumps. */}
               <span
                 className="text-sm inline-block overflow-hidden transition-all duration-300 ease-out"
                 style={{
@@ -120,8 +125,6 @@ const Header = ({ setToggleChat }: HeaderProps) => {
               >
                 {it.label}
               </span>
-
-              {/* Only apply left margin to the icon when the label is visible so spacing matches previous behavior */}
               <span className={isHovered ? "ml-2" : ""}>{it.icon}</span>
             </a>
           );

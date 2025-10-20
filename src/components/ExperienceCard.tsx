@@ -31,7 +31,7 @@ const ExperienceCard = ({
     }
   }, [isExpanded]);
 
-  const containerClass = `flex flex-col rounded-2xl md:rounded-3xl p-10 w-full min-h-[10rem] md:max-w-none overflow-hidden transition-transform duration-150 ease-out ${
+  const containerClass = `flex flex-col rounded-2xl md:rounded-3xl p-10 w-full min-h-[10rem] md:max-w-none overflow-hidden border border-transparent hover:border-gray-500 transition-transform transition-colors duration-150 ease-out ${
     isExpanded ? "md:col-span-2" : "md:max-w-[22.5rem]"
   } ${isDark ? "bg-gray-800" : "bg-gray-100"}`;
 

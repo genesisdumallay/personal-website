@@ -14,8 +14,9 @@ const AboutMe = () => {
           Hello! I am Genesis. I am based in Quezon City. I&#39;m a software
           developer, with my experience primarily in web development. I am an
           advocate to using AI for software automation solutions. As a Software
-          Engineer, I solve problems through efficient, effective and clean
-          solutions.
+          Engineer, I try to solve problems through efficient, effective and
+          clean solutions. I prefer being in backend develpoment, enjoying
+          tackling technical challenges.
         </p>
       </div>
     </div>
