@@ -58,7 +58,7 @@ const Header = ({ setToggleChat }: HeaderProps) => {
             {
               id: "resume",
               icon: <FaFileAlt {...iconStyle} />,
-              link: "/Dumallay, Genesis M..pdf",
+              link: "/DumallayGenesis.pdf",
               label: "Resume",
             },
             {

@@ -40,7 +40,7 @@ const ExperienceCard = ({
       className={containerClass}
       role={onToggle ? "button" : undefined}
       tabIndex={onToggle ? 0 : undefined}
-      onClick={() => onToggle && onToggle()}
+      onClick={() => onToggle?.()}
       aria-pressed={isExpanded}
       onMouseEnter={() => setIsHoveredOrFocused(true)}
       onMouseLeave={() => setIsHoveredOrFocused(false)}
@@ -98,7 +98,7 @@ const ExperienceCard = ({
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onToggle && onToggle();
+            onToggle?.();
           }}
           className={`font-semibold hover:underline text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 rounded ${
             isDark ? "text-gray-100" : "text-gray-800"
