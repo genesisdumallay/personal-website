@@ -13,8 +13,8 @@ const Experience = () => {
         "Lead a software development team as PM and Tech Lead, throughout software development lifecycle.",
       details: [
         "Developed an event recommendation application that scrapes Manila City events and recommends them based on event and in-app user data.",
-        "Designed and Developed the application's system architecture. Defining system process and logic flow.",
-        "Implemented a content-based event recommender using Min-Max scaling, a weighted preference score, cosine similarity, and K-Nearest Neighbors to rank personalized events..",
+        "Designed and developed the application's system architecture. Defining system process and logic flow.",
+        "Implemented a content-based event recommender using Min-Max scaling, a weighted preference score, cosine similarity, and K-Nearest Neighbors to rank personalized events.",
       ],
     },
     {
@@ -27,7 +27,7 @@ const Experience = () => {
         "Refactored an entire project codebase including frontend and backend, improving codebase readability, separation of concerns, maintinability, website loading speed and performance load.",
         "Worked with AWS services in developing new and maitaining existing internal projects.",
         "Helped maintain existing internal projects by developing user-requested new features, improving website performance speed and fortifying endpoints security.",
-        "Worked with a team of developers using Agile methodologies, sprint planning, and code reviews to ensure timely delivery of software solutions.",
+        "Worked with a software development using Agile methodologies, sprint planning, and code reviews to ensure timely delivery of software solutions.",
       ],
     },
   ];
