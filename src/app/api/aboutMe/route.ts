@@ -24,11 +24,12 @@ export async function GET() {
     try {
       await fs.promises.access(filePath, fs.constants.R_OK);
     } catch (err) {
-      console.error("[aboutMe route] File not accessible:", filePath);
       return NextResponse.json(
         {
           ok: false,
-          error: "About me file not found or not accessible",
+          error: `About me file not found or not accessible: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
         },
         { status: 404 }
       );

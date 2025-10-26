@@ -1,0 +1,9 @@
+#!/bin/sh
+# Run a production build before allowing commits. If the build fails, abort the commit.
+pnpm run build
+if [ $? -ne 0 ]; then
+  echo "\nCommit aborted: 'pnpm run build' failed. Fix build errors before committing.\n"
+  exit 1
+fi
+
+exit 0
