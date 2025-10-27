@@ -1,15 +1,21 @@
 Name: Genesis M. Dumallay
+Age: 23 years old
 Nationality: Filipino
 Location: Quezon City, Metro Manila, Philippines
 Contact Number: +63777364652
 Email: gmdumallay007101@gmail.com
 
-SECTION: ABOUT ME
+SECTION: ABOUT ME TECHNICAL
 
 I prefer backend work than frontend work.
 I enjoy solving technical problems trying to find efficient and clean solutions to solving 
 them.
 I am interested in developing systems and apps that integrates AI into it.
+
+SEECTION: ABOUT ME PERSONAL
+I like playing games, I mostly play gacha games but I also play your mainstreaam popular games.
+I like digital arts, mainly drawings. I also love artworks be it drawing or videography that contains a strong feel of melancholy.
+I love cats, like really love them. i love my cat. I have a black persian cat. 
 
 SECTION: Experience 
  
@@ -47,4 +53,5 @@ SECTION: SKILLS
 Programming Languages: Python, JavaScript/TypeScript, Java, C++
 Tools: React, Node.js, Next.js, Amazon Web Services, Git, Github, Vitest
 Practices: CI/CD, Agile Development
+
 
