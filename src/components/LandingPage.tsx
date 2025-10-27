@@ -27,10 +27,13 @@ const LandingPage = ({
       {toggleChat && <ChatWindow toggleChat={setToggleChat} />}
 
       <div className="w-full max-w-[45rem] mx-auto px-4">
-        <h1 className="text-4xl font-semibold text-center mb-5">
-          IN DEVELOPMENT
+        <h1
+          className={`text-6xl font-semibold mb-2 ${
+            isDark ? "text-gray-300" : "text-gray-800"
+          }`}
+        >
+          Hi, I&#39;m Genesis!
         </h1>
-        <h1 className="text-6xl font-semibold mb-2 text-gray-800">Hi, I&#39;m Genesis!</h1>
         <p className="text-2xl mt-1 mb-7 ml-1">Software Engineer</p>
         <p className="mt-1 mb-7 ml-1">
           Chat with my assistant if you want to know more about me and explore
