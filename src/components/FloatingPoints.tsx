@@ -1,10 +1,16 @@
 "use client";
 import { useEffect, useRef, useCallback, useState } from "react";
 
-const FloatingPoints = () => {
+interface FloatingPointsProps {
+  isDark?: boolean;
+}
+
+const FloatingPoints = ({ isDark = false }: FloatingPointsProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationRef = useRef<number | null>(null);
-  const particlesRef = useRef<{ x: number; y: number; z: number; radius: number }[]>([]);
+  const particlesRef = useRef<
+    { x: number; y: number; z: number; radius: number }[]
+  >([]);
   const directionRef = useRef({ x: 0, y: 0 });
   const isMouseMovingRef = useRef(false);
   const mouseMoveTimeout = useRef<number | null>(null);
@@ -14,9 +20,8 @@ const FloatingPoints = () => {
     const detectMobile = () => {
       const userAgent = navigator.userAgent.toLowerCase();
       const mobileDetected =
-        /android|iphone|ipad|opera mini|mobile/i.test(
-          userAgent
-        ) || navigator.maxTouchPoints > 0;
+        /android|iphone|ipad|opera mini|mobile/i.test(userAgent) ||
+        navigator.maxTouchPoints > 0;
 
       setIsMobile(mobileDetected);
     };
@@ -64,13 +69,28 @@ const FloatingPoints = () => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    const backgroundColor = isDark ? "#1e2030" : "#fafafa";
+    const particleColors = isDark
+      ? {
+          core: "rgba(200, 200, 200, 0.8)",
+          mid: "rgba(150, 180, 200, 0.6)",
+          outer: "rgba(50, 50, 100, 0)",
+          glowMultiplier: 2,
+        }
+      : {
+          core: "rgba(50, 50, 50, 0.9)",
+          mid: "rgba(30, 30, 30, 0.6)",
+          outer: "rgba(0, 0, 0, 0)",
+          glowMultiplier: 1.5,
+        };
+
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#fafafa";
+      ctx.fillStyle = backgroundColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       const { x: dirX, y: dirY } = directionRef.current;
-      const speed = isMouseMovingRef.current ? 0.2 : 1;
+      const speed = isMouseMovingRef.current ? 0.05 : 0.15;
       const angleX = dirX * 0.05 * speed;
       const angleY = dirY * 0.1 * speed;
       const cosX = Math.cos(angleX),
@@ -102,12 +122,20 @@ const FloatingPoints = () => {
         let size = Math.max(p.radius * scale, 0.1);
         if (p.z > canvas.width * 0.4) size *= 1.5;
 
-        if (!isFinite(screenX) || !isFinite(screenY) || !isFinite(size)) continue;
+        if (!isFinite(screenX) || !isFinite(screenY) || !isFinite(size))
+          continue;
 
-        const gradient = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, size * 1.5);
-        gradient.addColorStop(0, "rgba(50, 50, 50, 0.9)");
-        gradient.addColorStop(0.2, "rgba(30, 30, 30, 0.6)");
-        gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+        const gradient = ctx.createRadialGradient(
+          screenX,
+          screenY,
+          0,
+          screenX,
+          screenY,
+          size * particleColors.glowMultiplier
+        );
+        gradient.addColorStop(0, particleColors.core);
+        gradient.addColorStop(0.2, particleColors.mid);
+        gradient.addColorStop(1, particleColors.outer);
 
         ctx.beginPath();
         ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
@@ -125,7 +153,7 @@ const FloatingPoints = () => {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, []);
+  }, [isDark]);
 
   const handleMouseMove = useCallback(
     (event: MouseEvent) => {
@@ -133,8 +161,10 @@ const FloatingPoints = () => {
 
       const centerX = window.innerWidth / 2;
       const centerY = window.innerHeight / 3;
-      directionRef.current.x += ((event.clientX - centerX) * 0.005 - directionRef.current.x) * 0.3;
-      directionRef.current.y += ((event.clientY - centerY) * 0.01 - directionRef.current.y) * 0.3;
+      directionRef.current.x +=
+        ((event.clientX - centerX) * 0.005 - directionRef.current.x) * 0.3;
+      directionRef.current.y +=
+        ((event.clientY - centerY) * 0.01 - directionRef.current.y) * 0.3;
       isMouseMovingRef.current = true;
 
       if (mouseMoveTimeout.current !== null) {
@@ -154,17 +184,17 @@ const FloatingPoints = () => {
 
   return (
     <canvas
-  ref={canvasRef}
-  style={{
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100vh",
-    pointerEvents: "none",
-    zIndex: "-10",
-  }}
-/>
+      ref={canvasRef}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100vh",
+        pointerEvents: "none",
+        zIndex: "-10",
+      }}
+    />
   );
 };
 

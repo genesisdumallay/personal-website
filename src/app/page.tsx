@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import FloatingPoints from "@/components/FloatingPoints";
-import FloatingPointsDark from "@/components/FloatingPointsDark";
 import Footer from "@/components/Footer";
 import LandingPage from "@/components/LandingPage";
 import Header from "@/components/Header";
@@ -17,7 +16,7 @@ export default function Home() {
   return (
     <main className="relative min-h-screen font-sans">
       <div className="absolute inset-0 -z-10">
-        {isDark ? <FloatingPointsDark /> : <FloatingPoints />}
+        <FloatingPoints isDark={isDark} />
       </div>
 
       <header className="sticky top-0 left-0 right-0 z-50 backdrop-blur-sm">
