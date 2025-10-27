@@ -1,3 +1,5 @@
+import { buildMessageArray } from "@/utils/conversationHistory";
+
 interface Message {
   role: "user" | "assistant" | "system";
   content: string;
@@ -8,13 +10,115 @@ interface ClassificationResponse {
   reasoning?: string;
 }
 
-/**
- * Classifies whether a user query requires personal information about the owner
- * This is the first step in the agentic AI flow
- *
- * @param userMessage - The user's query to classify
- * @returns Classification result indicating if personal info is needed
- */
+interface StreamCallbacks {
+  onChunk?: (chunk: string) => void;
+  onComplete?: (fullText: string) => void;
+  onError?: (error: string) => void;
+}
+
+interface GroqAPIRequest {
+  messages: Message[];
+  stream?: boolean;
+}
+
+const streamGroqResponse = async (
+  messages: Message[],
+  callbacks?: StreamCallbacks
+): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    let fullText = "";
+    let abortController: AbortController | null = null;
+
+    try {
+      abortController = new AbortController();
+
+      const requestBody: GroqAPIRequest = {
+        messages,
+        stream: true,
+      };
+
+      fetch("/api/groq", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+        signal: abortController.signal,
+      })
+        .then(async (response) => {
+          if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+          }
+
+          if (!response.body) {
+            throw new Error("Response body is null");
+          }
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+
+          while (true) {
+            const { done, value } = await reader.read();
+
+            if (done) {
+              callbacks?.onComplete?.(fullText);
+              resolve(fullText);
+              break;
+            }
+
+            // Decode the chunk
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split("\n");
+
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                try {
+                  const data = JSON.parse(line.slice(6));
+
+                  if (data.error) {
+                    callbacks?.onError?.(data.error);
+                    reject(new Error(data.error));
+                    return;
+                  }
+
+                  if (data.done) {
+                    callbacks?.onComplete?.(fullText);
+                    resolve(fullText);
+                    return;
+                  }
+
+                  if (data.content) {
+                    fullText += data.content;
+                    callbacks?.onChunk?.(data.content);
+                  }
+                } catch (e) {
+                  console.warn(
+                    "[streamGroqResponse] Failed to parse SSE data:",
+                    e
+                  );
+                }
+              }
+            }
+          }
+        })
+        .catch((err) => {
+          if (err.name === "AbortError") {
+            console.debug("[streamGroqResponse] Request aborted");
+            return;
+          }
+
+          const errorMsg =
+            err instanceof Error ? err.message : "Unknown error occurred";
+          callbacks?.onError?.(errorMsg);
+          reject(err);
+        });
+    } catch (err) {
+      const errorMsg =
+        err instanceof Error ? err.message : "Failed to initiate stream";
+      callbacks?.onError?.(errorMsg);
+      reject(new Error(errorMsg));
+    }
+  });
+};
+
 const classifyUserIntent = async (
   userMessage: string
 ): Promise<ClassificationResponse> => {
@@ -65,7 +169,7 @@ Respond ONLY with the JSON object, no other text.`;
     const res = await fetch("/api/groq", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify({ messages, stream: false }),
     });
 
     if (!res.ok) {
@@ -126,12 +230,15 @@ Respond ONLY with the JSON object, no other text.`;
 
 /**
  * Responds to general queries that don't require personal information
+ * Uses conversation history to maintain context across multiple turns
  *
  * @param userMessage - The user's query
+ * @param callbacks - Optional callbacks for streaming
  * @returns AI response for general conversation
  */
 const handleGeneralQuery = async (
-  userMessage: string
+  userMessage: string,
+  callbacks?: StreamCallbacks
 ): Promise<string | null> => {
   const generalPrompt = `You are a friendly and helpful chatbot assistant for a personal portfolio website. 
 The user's query does not require specific information about the portfolio owner.
@@ -140,31 +247,20 @@ Respond in a warm, engaging, and professional manner. Keep your responses concis
 If the user greets you or asks how you are, respond politely.
 If the user asks something you cannot answer, politely redirect them to ask about the portfolio owner.
 
-Be conversational but professional. You represent the portfolio owner's brand.`;
+Be conversational but professional. You represent the portfolio owner's brand.
+Maintain context from previous messages in the conversation.`;
 
   try {
-    const messages: Message[] = [
-      { role: "system", content: generalPrompt },
-      { role: "user", content: userMessage },
-    ];
+    const messages = buildMessageArray(userMessage, generalPrompt);
 
-    console.debug("[handleGeneralQuery] Sending general query:", userMessage);
+    console.debug(
+      "[handleGeneralQuery] Sending general query with history:",
+      userMessage
+    );
 
-    const res = await fetch("/api/groq", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages }),
-    });
+    const result = await streamGroqResponse(messages, callbacks);
 
-    if (!res.ok) {
-      console.error("[handleGeneralQuery] API error:", res.status);
-      return null;
-    }
-
-    const payload = await res.json();
-    const result = payload?.result || null;
-
-    console.debug("[handleGeneralQuery] Response:", result);
+    console.debug("[handleGeneralQuery] Response completed");
     return result;
   } catch (err) {
     console.error("[handleGeneralQuery] Error:", err);
@@ -172,15 +268,9 @@ Be conversational but professional. You represent the portfolio owner's brand.`;
   }
 };
 
-/**
- * Responds to queries that require personal information about the portfolio owner
- * Fetches the about me context and includes it in the prompt
- *
- * @param userMessage - The user's query about personal information
- * @returns AI response with personal information context
- */
 const handlePersonalInfoQuery = async (
-  userMessage: string
+  userMessage: string,
+  callbacks?: StreamCallbacks
 ): Promise<string | null> => {
   try {
     // Fetch the about me information
@@ -222,30 +312,16 @@ Instructions:
 3. Be friendly, engaging, and professional in your responses.
 4. Keep responses concise and focused, providing only the necessary information unless asked for more details.
 5. When discussing experience or projects, be specific and highlight key achievements.
-6. Maintain a first-person perspective when appropriate (e.g., "I worked on..." not "Genesis worked on...").`;
+6. Maintain a first-person perspective when appropriate (e.g., "I worked on..." not "Genesis worked on...").
+7. Reference previous parts of the conversation naturally when relevant.`;
 
-    const messages: Message[] = [
-      { role: "system", content: personalInfoPrompt },
-      { role: "user", content: userMessage },
-    ];
+    const messages = buildMessageArray(userMessage, personalInfoPrompt);
 
     console.debug(
-      "[handlePersonalInfoQuery] Sending query with personal context"
+      "[handlePersonalInfoQuery] Sending query with personal context and history"
     );
 
-    const res = await fetch("/api/groq", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages }),
-    });
-
-    if (!res.ok) {
-      console.error("[handlePersonalInfoQuery] API error:", res.status);
-      return null;
-    }
-
-    const payload = await res.json();
-    const result = payload?.result || null;
+    const result = await streamGroqResponse(messages, callbacks);
 
     console.debug("[handlePersonalInfoQuery] Response generated successfully");
     return result;
@@ -255,19 +331,9 @@ Instructions:
   }
 };
 
-/**
- * 1. Classify user intent to determine if personal info is needed
- * 2. If personal info needed: Fetch about me context and generate response
- * 3. If personal info NOT needed: Generate general response
- *
- * This ensures optimal API usage - only one AI call for general queries,
- * two calls (classify + respond) for personal info queries
- *
- * @param messages - Array of conversation messages (currently only processes the last user message)
- * @returns AI-generated response or null on error
- */
 const runGroq = async (
-  messages: Message[] = [{ role: "user", content: "Hello, how are you?" }]
+  messages: Message[] = [{ role: "user", content: "Hello, how are you?" }],
+  callbacks?: StreamCallbacks
 ): Promise<string | null> => {
   try {
     const userMessage = messages[messages.length - 1]?.content || "";
@@ -284,10 +350,10 @@ const runGroq = async (
 
     if (classification.needsPersonalInfo) {
       console.debug("[runGroq] Routing to personal info handler");
-      return await handlePersonalInfoQuery(userMessage);
+      return await handlePersonalInfoQuery(userMessage, callbacks);
     } else {
       console.debug("[runGroq] Routing to general query handler");
-      return await handleGeneralQuery(userMessage);
+      return await handleGeneralQuery(userMessage, callbacks);
     }
   } catch (err) {
     console.error("[runGroq] Orchestration error:", err);
@@ -296,3 +362,4 @@ const runGroq = async (
 };
 
 export default runGroq;
+export type { Message, StreamCallbacks };
