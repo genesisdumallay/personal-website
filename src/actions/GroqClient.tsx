@@ -64,7 +64,6 @@ const streamGroqResponse = async (
               break;
             }
 
-            // Decode the chunk
             const chunk = decoder.decode(value, { stream: true });
             const lines = chunk.split("\n");
 
@@ -273,7 +272,6 @@ const handlePersonalInfoQuery = async (
   callbacks?: StreamCallbacks
 ): Promise<string | null> => {
   try {
-    // Fetch the about me information
     let aboutMe = "";
     try {
       console.debug("[handlePersonalInfoQuery] Fetching about me information");

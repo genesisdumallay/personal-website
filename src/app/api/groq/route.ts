@@ -84,7 +84,6 @@ export async function POST(req: Request) {
               }
             }
 
-            // Send completion signal
             const doneData = `data: ${JSON.stringify({
               content: "",
               done: true,

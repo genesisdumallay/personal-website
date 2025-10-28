@@ -11,7 +11,7 @@ const Footer = () => {
     <div
       className={`${
         isDark ? "text-gray-200" : "text-gray-900"
-      } flex items-center justify-center gap-6 w-max mx-auto p-2 mt-2 border-t border-gray-400`}
+      } flex items-center justify-center gap-6 w-max mx-auto p-2 pt-4 mt-2 border-t border-gray-400`}
     >
       {[
         {
