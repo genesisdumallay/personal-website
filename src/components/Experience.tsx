@@ -25,9 +25,9 @@ const Experience = () => {
         "Developed and maintained internal software apps, tools and projects",
       details: [
         "Refactored an entire project codebase including frontend and backend, improving codebase readability, separation of concerns, maintinability, website loading speed and performance load.",
-        "Worked with AWS services in developing new and maitaining existing internal projects.",
-        "Helped maintain existing internal projects by developing user-requested new features, improving website performance speed and fortifying endpoints security.",
-        "Worked with a software development using Agile methodologies, sprint planning, and code reviews to ensure timely delivery of software solutions.",
+        "Worked with Amazon Web Services ( AWS ) in maintaining existing projects and developing and integrating agentic AI into projects and automating work processes.",
+        "Helped assure codebase quality and maintenance for company projects by developing project unit tests. Improving codebase quality, maintenance, and streamlined development flow.",
+        "Worked with a software development team using Agile methodologies, sprint planning, and code reviews to ensure timely delivery of software solutions.",
       ],
     },
   ];
