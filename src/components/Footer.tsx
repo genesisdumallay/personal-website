@@ -1,8 +1,15 @@
+"use client";
 import React, { useState } from "react";
 import { useTheme } from "@/hooks/ThemeContext";
 import { FaEnvelope, FaGithub, FaLinkedin } from "react-icons/fa";
 
-const Footer = () => {
+const Footer = ({
+  onOpenContact,
+  isContactOpen,
+}: {
+  onOpenContact?: () => void;
+  isContactOpen?: boolean;
+}) => {
   const { isDark } = useTheme();
   const [hovered, setHovered] = useState<string | null>(null);
   const iconStyle = { size: 20 };
@@ -34,28 +41,49 @@ const Footer = () => {
         },
       ].map((it) => {
         if (it.id === "email") {
+          // Email wrapper is relative so the ContactForm can be positioned adjacent to it
           return (
-            <a
-              key={it.id}
-              href={`mailto:gdumallay007101@gmail.com`}
-              className="flex items-center"
-            >
-              <span className="border border-gray-500 p-1 rounded flex items-center gap-1 ml-2">
-                <span className="px-1">{it.icon}</span>
-                <span className="ml-1">gdumallay007101@gmail.com</span>
-              </span>
-            </a>
+            <div key={it.id} className="relative">
+              <button
+                onClick={() =>
+                  onOpenContact
+                    ? onOpenContact()
+                    : (window.location.href =
+                        "mailto:gmdumallay007101@gmail.com")
+                }
+                className={`flex items-center transition-all duration-300 cursor-pointer ${
+                  isContactOpen ? "opacity-0 scale-95 pointer-events-none" : ""
+                }`}
+                aria-label="Open contact form"
+                aria-expanded={isContactOpen ? true : false}
+              >
+                <span
+                  className={`border border-gray-500 p-1 rounded flex items-center gap-1 ml-2 transition-all duration-300`}
+                >
+                  <span className="px-1">{it.icon}</span>
+                  <span className="ml-1">gmdumallay007101@gmail.com</span>
+                </span>
+              </button>
+
+              {/* Contact panel anchored here -- only rendered when open so it can't reserve space */}
+            </div>
           );
         }
 
         const isHovered = hovered === it.id;
+        const iconContainerClass = `flex items-center transition-all duration-300 ${
+          isContactOpen
+            ? "opacity-0 w-0 pointer-events-none overflow-hidden"
+            : "opacity-100 w-auto"
+        }`;
+
         return (
           <a
             key={it.id}
             href={it.link}
             onMouseEnter={() => setHovered(it.id)}
             onMouseLeave={() => setHovered(null)}
-            className="flex items-center"
+            className={iconContainerClass}
           >
             <span
               className="text-sm inline-block overflow-hidden transition-all duration-300 ease-out"

@@ -1,4 +1,4 @@
-import { Groq } from "groq-sdk";
+import { GoogleGenAI } from "@google/genai";
 
 export async function POST(req: Request) {
   try {
@@ -25,15 +25,14 @@ export async function POST(req: Request) {
       );
     }
 
-    const GROQ_API_KEY = process.env.GROQ_KEY;
-    if (!GROQ_API_KEY) {
-      console.error(
-        "[groq route] GROQ_KEY environment variable not configured"
-      );
+    const API_KEY = process.env.GOOGLE_AI_STUDIO_KEY;
+
+    if (!API_KEY) {
+      console.error("API key environment variable not configured");
       return new Response(
         JSON.stringify({
           ok: false,
-          error: "GROQ_KEY is not configured on the server",
+          error: "API_KEY is not configured on the server",
         }),
         {
           status: 500,
@@ -42,58 +41,120 @@ export async function POST(req: Request) {
       );
     }
 
-    const groq = new Groq({ apiKey: GROQ_API_KEY });
+    const ai = new GoogleGenAI({ apiKey: API_KEY });
 
-    const chatCompletion = await groq.chat.completions.create({
-      messages,
-      model: "meta-llama/llama-4-scout-17b-16e-instruct",
-      temperature: 1,
-      max_completion_tokens: 1024,
-      top_p: 1,
-      stream: true,
-      stop: null,
+    const buildPromptFromMessages = (msgs: any[]) => {
+      let prompt = "";
+      for (const m of msgs) {
+        const role = (m.role || "user").toLowerCase();
+        if (role === "system") {
+          prompt += `[SYSTEM]: ${m.content}\n`;
+        } else if (role === "assistant") {
+          prompt += `[ASSISTANT]: ${m.content}\n`;
+        } else {
+          prompt += `[USER]: ${m.content}\n`;
+        }
+      }
+      prompt += "\n[ASSISTANT]: ";
+      return prompt;
+    };
+
+    const prompt = buildPromptFromMessages(messages);
+
+    const genResponsePromiseOrIterable = ai.models.generateContentStream({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        temperature: 0.4,
+      },
     });
+
+    const extractTextFromChunk = (chunk: any): string => {
+      if (!chunk) return "";
+      if (typeof chunk.text === "string") return chunk.text;
+      const candidateText =
+        chunk?.output?.[0]?.content ??
+        chunk?.candidates?.[0]?.content ??
+        chunk?.candidates?.[0]?.content?.parts
+          ?.map((p: any) => p.text || p)
+          .join("") ??
+        "";
+      return typeof candidateText === "string"
+        ? candidateText
+        : String(candidateText);
+    };
 
     if (shouldStream) {
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
         async start(controller) {
           try {
-            let chunkCount = 0;
+            const genResponse = await genResponsePromiseOrIterable;
+            const isAsyncIterable =
+              genResponse &&
+              typeof (genResponse as any)[Symbol.asyncIterator] === "function";
 
-            for await (const chunk of chatCompletion) {
-              const contentPart = chunk.choices?.[0]?.delta?.content || "";
+            if (isAsyncIterable) {
+              // Real streaming: forward each incoming chunk from the SDK as SSE
+              let totalChars = 0;
+              let chunkIndex = 0;
+              for await (const chunk of genResponse as any) {
+                const text = extractTextFromChunk(chunk) || "";
+                totalChars += text.length;
+                chunkIndex++;
 
-              if (contentPart) {
-                chunkCount++;
-
-                // Log only first few chunks to avoid spam
-                if (chunkCount <= 3) {
+                if (chunkIndex <= 3) {
                   console.debug(
-                    "[groq route] Streaming chunk:",
-                    contentPart.substring(0, 50)
+                    "[groq route] Streamed chunk:",
+                    text.substring(0, 80)
                   );
                 }
 
                 const sseData = `data: ${JSON.stringify({
-                  content: contentPart,
+                  content: text,
                   done: false,
                 })}\n\n`;
-
                 controller.enqueue(encoder.encode(sseData));
               }
+
+              // send done
+              controller.enqueue(
+                encoder.encode(
+                  `data: ${JSON.stringify({ content: "", done: true })}\n\n`
+                )
+              );
+              console.debug("[groq route] Streaming completed:", {
+                totalChars,
+                totalChunks: chunkIndex,
+                timestamp: new Date().toISOString(),
+              });
+            } else {
+              // SDK did not return an async iterable. Forward the full text
+              // as a single SSE frame (still streaming-first — no local
+              // re-slicing into artificial chunk sizes).
+              const fullText = extractTextFromChunk(genResponse) ?? "";
+
+              if (fullText) {
+                const sseData = `data: ${JSON.stringify({
+                  content: fullText,
+                  done: false,
+                })}\n\n`;
+                controller.enqueue(encoder.encode(sseData));
+              }
+
+              // send done
+              controller.enqueue(
+                encoder.encode(
+                  `data: ${JSON.stringify({ content: "", done: true })}\n\n`
+                )
+              );
+
+              console.debug("[groq route] Streaming completed (no-iterable):", {
+                responseLength: fullText.length,
+                frames: fullText ? 1 : 0,
+                timestamp: new Date().toISOString(),
+              });
             }
-
-            const doneData = `data: ${JSON.stringify({
-              content: "",
-              done: true,
-            })}\n\n`;
-            controller.enqueue(encoder.encode(doneData));
-
-            console.debug("[groq route] Streaming completed:", {
-              totalChunks: chunkCount,
-              timestamp: new Date().toISOString(),
-            });
 
             controller.close();
           } catch (err) {
@@ -121,24 +182,15 @@ export async function POST(req: Request) {
         },
       });
     } else {
-      let responseText = "";
-      let chunkCount = 0;
-
-      for await (const chunk of chatCompletion) {
-        const contentPart = chunk.choices?.[0]?.delta?.content || "";
-        if (contentPart) {
-          chunkCount++;
-          responseText += contentPart;
-        }
-      }
-
+      // Non-streaming: resolve the SDK result and return JSON
+      const genResponse = await genResponsePromiseOrIterable;
+      const finalText = extractTextFromChunk(genResponse) ?? "";
       console.debug("[groq route] Non-streaming completion successful:", {
-        totalChunks: chunkCount,
-        responseLength: responseText.length,
+        responseLength: finalText.length,
         timestamp: new Date().toISOString(),
       });
 
-      return new Response(JSON.stringify({ ok: true, result: responseText }), {
+      return new Response(JSON.stringify({ ok: true, result: finalText }), {
         headers: { "Content-Type": "application/json" },
       });
     }

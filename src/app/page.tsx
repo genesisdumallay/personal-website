@@ -1,17 +1,38 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import FloatingPoints from "@/components/FloatingPoints";
 import Footer from "@/components/Footer";
 import LandingPage from "@/components/LandingPage";
 import Header from "@/components/Header";
 import AboutMe from "@/components/AboutMe";
 import Experience from "@/components/Experience";
+import ContactForm from "@/components/ContactForm";
 import { useTheme } from "@/hooks/ThemeContext";
 
 export default function Home() {
   const { isDark } = useTheme();
   const [toggleChat, setToggleChat] = useState(false);
   const [typingText, setTypingText] = useState("");
+  const [showContact, setShowContact] = useState(false);
+  const contactRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (showContact && contactRef.current) {
+      contactRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+
+      const t = setTimeout(() => {
+        const focusable = contactRef.current?.querySelector<
+          HTMLInputElement | HTMLTextAreaElement | HTMLElement
+        >('input[name="email"], input, textarea, button, [tabindex]');
+        (focusable as HTMLElement | null)?.focus();
+      }, 360);
+
+      return () => clearTimeout(t);
+    }
+  }, [showContact]);
 
   return (
     <main className="relative min-h-screen font-sans">
@@ -50,8 +71,26 @@ export default function Home() {
             id="contact-section"
             className="mt-30 mb-5 flex justify-center"
           >
-            <Footer></Footer>
-            {/* <ContactForm isDark={isDark} /> */}
+            <div
+              className={`relative flex flex-wrap items-center gap-6 w-full max-w-4xl transition-all duration-300 justify-center`}
+            >
+              <div className={`flex items-center gap-6 z-10`}>
+                <Footer
+                  onOpenContact={() => setShowContact((s) => !s)}
+                  isContactOpen={showContact}
+                />
+              </div>
+
+              {/* Render ContactForm centered below the footer when open */}
+              {showContact && (
+                <div
+                  ref={contactRef}
+                  className="w-full flex justify-center mt-4"
+                >
+                  <ContactForm onClose={() => setShowContact(false)} />
+                </div>
+              )}
+            </div>
           </section>
         </div>
       </div>
