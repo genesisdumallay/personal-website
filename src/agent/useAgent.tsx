@@ -40,7 +40,7 @@ export const useAgent = () => {
 
     agentRef.current = new GeminiAgent({
       apiKey: API_KEY,
-      model: "gemini-2.5-flash",
+      model: "gemini-2.5-flash-lite",
       systemInstruction:
         "You are a helpful, professional, and friendly AI assistant for a Senior Frontend Engineer's personal website. You have access to tools to find information about the engineer's projects, contact info, and availability. Always be polite and concise. If a tool doesn't return what you expect, explain that to the user. Use Markdown for formatting lists and emphasis.",
       tools: toolsImplementation,

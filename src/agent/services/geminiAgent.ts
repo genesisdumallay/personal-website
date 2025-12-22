@@ -29,22 +29,15 @@ export class GeminiAgent {
     });
   }
 
-  /**
-   * Sends a message and automatically handles tool use loops.
-   * @param message The user message
-   * @param onToolStart Optional callback when a tool starts executing
-   * @returns The final text response from the model
-   */
   async sendMessage(
     message: string,
     onToolStart?: (name: string, args: any) => Promise<void> | void
   ): Promise<string | undefined> {
-    // 1. Initial request
     let response = await this.chat.sendMessage({ message });
 
     let turnCount = 0;
 
-    // 2. Loop while the model requests function calls
+    // Loop while the model requests function calls
     while (
       response.functionCalls &&
       response.functionCalls.length > 0 &&
@@ -87,7 +80,6 @@ export class GeminiAgent {
         });
       }
 
-      // Send tool outputs back to the model
       response = await this.chat.sendMessage({
         message: functionResponseParts,
       });

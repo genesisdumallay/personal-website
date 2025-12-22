@@ -1,7 +1,6 @@
 import { FunctionDeclaration, Type } from "@google/genai";
 import { Project } from "../../models/types";
 
-// --- Mock Data ---
 const PORTFOLIO_DATA: Project[] = [
   {
     name: "Trajector Company Handbook Chatbot",
@@ -13,16 +12,18 @@ const PORTFOLIO_DATA: Project[] = [
       "TypeScript",
       "React",
     ],
-    description:
-      "An ai-powered chatbot that answers questions with the company handbook as the knowledge base and using retrieval augmented generation to query relevant information.",
+    description: `An ai-powered chatbot that answers questions with the company handbook as the knowledge base. 
+      It uses retrieval augmented generation to query relevant information. With prompt engineering tehchniques,
+      the chatbot's behavior is optimized to provide accurate and helpful responses based on the handbook content.`,
   },
   {
     name: "GatherInManila: A Machine Learning Powered Event Recommendation System",
     techStack: ["Python", "Flask", "sklearn"],
     description: `
       A machine learning powered event recommendation system for events in Manila, Philippines. 
-      Utilized user preferences and event features to suggest personalized events.
-      Using cosine similarity and k-nearest neighbors algorithms to match users with relevant event profiles.
+      Utilizes user preferences and event features to suggest personalized events.
+      Uses cosine similarity and k-nearest neighbors algorithms to match users with relevant event profiles.
+      The event data is sourced from online events posted from social media, namely, Facebook and Instagram.
       `,
   },
 ];
@@ -31,14 +32,20 @@ const CONTACT_INFO = {
   email: "gmdumallay007101@.gmail.com",
   github: "github.com/genesisdumallay",
   linkedin: "linkedin.com/in/genesisdumallay",
+  phonenumber: "+639777364652",
 };
 
 const ABOUT_ME = {
   name: "Genesis M. Dumallay",
   Age: "23",
-  Introduction: `
-  I am a Bachelor's of Science in Computer Science with specialization in Software Engineering Graduating Student at FEU institute of Technology.
-  I am from Quezon City
+  Work_Introduction: `
+  Hello! I am Genesis. I am based in Quezon City. I'm a software developer, with my experience primarily in web development.
+  I am an advocate to using AI for software automation solutions. 
+  As a Software Engineer, I try to solve problems through efficient, effective and clean solutions. I prefer being in backend development, enjoying tackling technical challenges.
+
+  `,
+  Outside_Work_Introduction: `
+  I love cats and I play some video games, read online media or watch animes on my free times.
   `,
 };
 

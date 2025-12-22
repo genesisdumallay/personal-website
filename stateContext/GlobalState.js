@@ -1,4 +1,4 @@
-let isDarkMode = false;
+let isDarkMode = true;
 
 export const getIsDarkMode = () => isDarkMode;
 

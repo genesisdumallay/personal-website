@@ -14,6 +14,7 @@ const FloatingPoints = ({ isDark = false }: FloatingPointsProps) => {
   const directionRef = useRef({ x: 0, y: 0 });
   const isMouseMovingRef = useRef(false);
   const mouseMoveTimeout = useRef<number | null>(null);
+  const dimensionsRef = useRef({ width: 0, height: 0, dpr: 1 });
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -41,6 +42,8 @@ const FloatingPoints = ({ isDark = false }: FloatingPointsProps) => {
     const dpr = Math.min(window.devicePixelRatio, 2);
     const width = document.documentElement.clientWidth;
     const height = document.documentElement.clientHeight * 1.1;
+
+    dimensionsRef.current = { width, height, dpr };
 
     canvas.width = width * dpr;
     canvas.height = height * dpr;
@@ -85,9 +88,15 @@ const FloatingPoints = ({ isDark = false }: FloatingPointsProps) => {
         };
 
     const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const { width, height } = dimensionsRef.current;
+      if (width === 0 || height === 0) {
+        animationRef.current = requestAnimationFrame(animate);
+        return;
+      }
+
+      ctx.clearRect(0, 0, width, height);
       ctx.fillStyle = backgroundColor;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, width, height);
 
       const { x: dirX, y: dirY } = directionRef.current;
       const speed = isMouseMovingRef.current ? 0.05 : 0.15;
@@ -110,17 +119,17 @@ const FloatingPoints = ({ isDark = false }: FloatingPointsProps) => {
         }
 
         p.z -= 2 * speed;
-        if (p.z < -canvas.width / 2) {
-          p.x = (Math.random() - 0.5) * canvas.width * 2;
-          p.y = (Math.random() - 0.5) * canvas.height * 1.2;
-          p.z = Math.max(canvas.width / 2, 1);
+        if (p.z < -width / 2) {
+          p.x = (Math.random() - 0.5) * width * 2;
+          p.y = (Math.random() - 0.5) * height * 1.2;
+          p.z = Math.max(width / 2, 1);
         }
 
         const scale = Math.max(300 / (p.z + 300), 0.1);
-        const screenX = p.x * scale + canvas.width / 2;
-        const screenY = p.y * scale + canvas.height / 2;
+        const screenX = p.x * scale + width / 2;
+        const screenY = p.y * scale + height / 2;
         let size = Math.max(p.radius * scale, 0.1);
-        if (p.z > canvas.width * 0.4) size *= 1.5;
+        if (p.z > width * 0.4) size *= 1.5;
 
         if (!isFinite(screenX) || !isFinite(screenY) || !isFinite(size))
           continue;

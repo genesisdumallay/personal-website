@@ -17,14 +17,18 @@ const Header = ({ setToggleChat }: HeaderProps) => {
         isDark ? "text-gray-200" : "text-gray-900"
       } flex flex-row gap-2`}
     >
-      <div className="flex items-center justify-center gap-6 border rounded w-max p-2 mt-3 border-gray-300 ml-auto">
+      <div
+        className={`flex items-center justify-center gap-6 border rounded w-max p-2 mt-3 ml-auto ${
+          isDark ? "border-gray-700" : "border-gray-300"
+        }`}
+      >
         {/* Visible toggle switch for light/dark mode */}
         <div className="flex items-center gap-2">
           <button
             onClick={toggleDark}
             aria-pressed={isDark}
             className={`relative inline-flex items-center h-6 rounded-full w-12 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 ${
-              isDark ? "bg-gray-600" : "bg-gray-300"
+              isDark ? "bg-blue-600" : "bg-gray-300"
             }`}
           >
             {/* Sun icon on the left inside the track */}
@@ -52,7 +56,11 @@ const Header = ({ setToggleChat }: HeaderProps) => {
           </button>
         </div>
       </div>
-      <div className="flex items-center justify-center gap-6 border rounded w-max p-2 mt-3 border-gray-300 mr-auto">
+      <div
+        className={`flex items-center justify-center gap-6 border rounded w-max p-2 mt-3 mr-auto ${
+          isDark ? "border-gray-700" : "border-gray-300"
+        }`}
+      >
         {(
           [
             {
@@ -131,8 +139,10 @@ const Header = ({ setToggleChat }: HeaderProps) => {
         })}
 
         <button
-          className={`border-l px-3 py-1 hover:bg-gray-200 ${
-            isDark ? "text-gray-200" : "text-gray-900"
+          className={`border-l px-3 py-1 transition-colors ${
+            isDark
+              ? "text-gray-200 border-gray-700 hover:bg-gray-800"
+              : "text-gray-900 border-gray-300 hover:bg-gray-200"
           }`}
           onClick={async () => {
             setToggleChat(true);

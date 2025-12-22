@@ -62,7 +62,7 @@ export async function POST(req: Request) {
     const prompt = buildPromptFromMessages(messages);
 
     const genResponsePromiseOrIterable = ai.models.generateContentStream({
-      model: "gemini-2.5-flash",
+      model: "gemma-3-1b",
       contents: prompt,
       config: {
         temperature: 0.4,
