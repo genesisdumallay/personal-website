@@ -1,4 +1,21 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, type GenerateContentResponse } from "@google/genai";
+
+interface Message {
+  role: string;
+  content: string;
+}
+
+interface ChunkCandidate {
+  content?: {
+    parts?: Array<{ text?: string } | string>;
+  };
+}
+
+type SDKChunk = GenerateContentResponse & {
+  text?: string;
+  output?: Array<{ content?: string }>;
+  candidates?: ChunkCandidate[];
+};
 
 export async function POST(req: Request) {
   try {
@@ -43,7 +60,7 @@ export async function POST(req: Request) {
 
     const ai = new GoogleGenAI({ apiKey: API_KEY });
 
-    const buildPromptFromMessages = (msgs: any[]) => {
+    const buildPromptFromMessages = (msgs: Message[]) => {
       let prompt = "";
       for (const m of msgs) {
         const role = (m.role || "user").toLowerCase();
@@ -69,14 +86,14 @@ export async function POST(req: Request) {
       },
     });
 
-    const extractTextFromChunk = (chunk: any): string => {
+    const extractTextFromChunk = (chunk: SDKChunk): string => {
       if (!chunk) return "";
       if (typeof chunk.text === "string") return chunk.text;
       const candidateText =
         chunk?.output?.[0]?.content ??
         chunk?.candidates?.[0]?.content ??
         chunk?.candidates?.[0]?.content?.parts
-          ?.map((p: any) => p.text || p)
+          ?.map((p) => (typeof p === "string" ? p : p.text || ""))
           .join("") ??
         "";
       return typeof candidateText === "string"
@@ -92,13 +109,15 @@ export async function POST(req: Request) {
             const genResponse = await genResponsePromiseOrIterable;
             const isAsyncIterable =
               genResponse &&
-              typeof (genResponse as any)[Symbol.asyncIterator] === "function";
+              typeof (genResponse as unknown as AsyncIterable<SDKChunk>)[
+                Symbol.asyncIterator
+              ] === "function";
 
             if (isAsyncIterable) {
               // Real streaming: forward each incoming chunk from the SDK as SSE
               let totalChars = 0;
               let chunkIndex = 0;
-              for await (const chunk of genResponse as any) {
+              for await (const chunk of genResponse as unknown as AsyncIterable<SDKChunk>) {
                 const text = extractTextFromChunk(chunk) || "";
                 totalChars += text.length;
                 chunkIndex++;
@@ -117,7 +136,6 @@ export async function POST(req: Request) {
                 controller.enqueue(encoder.encode(sseData));
               }
 
-              // send done
               controller.enqueue(
                 encoder.encode(
                   `data: ${JSON.stringify({ content: "", done: true })}\n\n`
@@ -132,7 +150,8 @@ export async function POST(req: Request) {
               // SDK did not return an async iterable. Forward the full text
               // as a single SSE frame (still streaming-first — no local
               // re-slicing into artificial chunk sizes).
-              const fullText = extractTextFromChunk(genResponse) ?? "";
+              const fullText =
+                extractTextFromChunk(genResponse as unknown as SDKChunk) ?? "";
 
               if (fullText) {
                 const sseData = `data: ${JSON.stringify({
@@ -142,7 +161,6 @@ export async function POST(req: Request) {
                 controller.enqueue(encoder.encode(sseData));
               }
 
-              // send done
               controller.enqueue(
                 encoder.encode(
                   `data: ${JSON.stringify({ content: "", done: true })}\n\n`
@@ -184,7 +202,8 @@ export async function POST(req: Request) {
     } else {
       // Non-streaming: resolve the SDK result and return JSON
       const genResponse = await genResponsePromiseOrIterable;
-      const finalText = extractTextFromChunk(genResponse) ?? "";
+      const finalText =
+        extractTextFromChunk(genResponse as unknown as SDKChunk) ?? "";
       console.debug("[groq route] Non-streaming completion successful:", {
         responseLength: finalText.length,
         timestamp: new Date().toISOString(),

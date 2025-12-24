@@ -1,6 +1,6 @@
 import { GoogleGenAI, Chat, Part, FunctionDeclaration } from "@google/genai";
 
-type ToolImplementation = (args: any) => Promise<any> | any;
+type ToolImplementation = (args: unknown) => Promise<unknown> | unknown;
 
 export interface AgentConfig {
   apiKey: string;
@@ -31,13 +31,12 @@ export class GeminiAgent {
 
   async sendMessage(
     message: string,
-    onToolStart?: (name: string, args: any) => Promise<void> | void
+    onToolStart?: (name: string, args: unknown) => Promise<void> | void
   ): Promise<string | undefined> {
     let response = await this.chat.sendMessage({ message });
 
     let turnCount = 0;
 
-    // Loop while the model requests function calls
     while (
       response.functionCalls &&
       response.functionCalls.length > 0 &&
@@ -47,7 +46,6 @@ export class GeminiAgent {
       const functionCalls = response.functionCalls;
       const functionResponseParts: Part[] = [];
 
-      // Execute all requested tools
       for (const call of functionCalls) {
         const { name, args, id } = call;
 
@@ -58,13 +56,14 @@ export class GeminiAgent {
         let result;
         if (name && this.tools[name]) {
           try {
-            // Support both async and sync tool implementations
             result = await Promise.resolve(this.tools[name](args));
-          } catch (error: any) {
+          } catch (error: unknown) {
             console.error(`Tool execution error for ${name}:`, error);
             result = {
               error:
-                error.message || "Unknown error occurred during tool execution",
+                error instanceof Error
+                  ? error.message
+                  : "Unknown error occurred during tool execution",
             };
           }
         } else {

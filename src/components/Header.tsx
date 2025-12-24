@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback} from "react";
 import { useTheme } from "@/hooks/ThemeContext";
 import { FaFileAlt, FaMoon, FaSun, FaUser, FaTerminal } from "react-icons/fa";
 
@@ -10,6 +10,32 @@ const Header = ({ setToggleChat }: HeaderProps) => {
   const { isDark, toggleDark } = useTheme();
   const iconStyle = { size: 20 };
   const [hovered, setHovered] = useState<string | null>(null);
+
+  const scrollToSection = useCallback((sectionId: string) => {
+    const section = document.querySelector(sectionId);
+    if (section) {
+      section.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, []);
+
+  const handleAboutClick = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      e.preventDefault();
+      scrollToSection("#about-me-section");
+    },
+    [scrollToSection]
+  );
+
+  const handleExperienceClick = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      e.preventDefault();
+      scrollToSection("#experience-section");
+    },
+    [scrollToSection]
+  );
 
   return (
     <div
@@ -27,7 +53,7 @@ const Header = ({ setToggleChat }: HeaderProps) => {
           <button
             onClick={toggleDark}
             aria-pressed={isDark}
-            className={`relative inline-flex items-center h-6 rounded-full w-12 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+            className={`relative inline-flex items-center h-6 rounded-full w-12 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer ${
               isDark ? "bg-blue-600" : "bg-gray-300"
             }`}
           >
@@ -74,34 +100,14 @@ const Header = ({ setToggleChat }: HeaderProps) => {
               icon: <FaUser {...iconStyle} />,
               link: "#about-me-section",
               label: "About Me",
-              onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
-                e.preventDefault();
-
-                const section = document.querySelector("#about-me-section");
-                if (section) {
-                  section.scrollIntoView({
-                    behavior: "smooth",
-                    block: "center",
-                  });
-                }
-              },
+              onClick: handleAboutClick,
             },
             {
               id: "experience",
               icon: <FaTerminal {...iconStyle} />,
               link: "#experience-section",
               label: "Experience",
-              onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
-                e.preventDefault();
-
-                const section = document.querySelector("#experience-section");
-                if (section) {
-                  section.scrollIntoView({
-                    behavior: "smooth",
-                    block: "center",
-                  });
-                }
-              },
+              onClick: handleExperienceClick,
             },
           ] as Array<{
             id: string;
@@ -139,7 +145,7 @@ const Header = ({ setToggleChat }: HeaderProps) => {
         })}
 
         <button
-          className={`border-l px-3 py-1 transition-colors ${
+          className={`border-l px-3 py-1 transition-colors cursor-pointer ${
             isDark
               ? "text-gray-200 border-gray-700 hover:bg-gray-800"
               : "text-gray-900 border-gray-300 hover:bg-gray-200"

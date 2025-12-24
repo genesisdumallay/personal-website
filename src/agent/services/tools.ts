@@ -35,28 +35,39 @@ const CONTACT_INFO = {
   phonenumber: "+639777364652",
 };
 
-const ABOUT_ME = {
-  name: "Genesis M. Dumallay",
-  Age: "23",
-  Work_Introduction: `
-  Hello! I am Genesis. I am based in Quezon City. I'm a software developer, with my experience primarily in web development.
-  I am an advocate to using AI for software automation solutions. 
-  As a Software Engineer, I try to solve problems through efficient, effective and clean solutions. I prefer being in backend development, enjoying tackling technical challenges.
+// const ABOUT_ME = {
+//   name: "Genesis M. Dumallay",
+//   Age: "23",
+//   Work_Introduction: `
+//   Hello! I am Genesis. I am based in Quezon City. I'm a software developer, with my experience primarily in web development.
+//   I am an advocate to using AI for software automation solutions.
+//   As a Software Engineer, I try to solve problems through efficient, effective and clean solutions. I prefer being in backend development, enjoying tackling technical challenges.
 
-  `,
-  Outside_Work_Introduction: `
-  I love cats and I play some video games, read online media or watch animes on my free times.
-  `,
-};
+//   `,
+//   Outside_Work_Introduction: `
+//   I love cats and I play some video games, read online media or watch animes on my free times.
+//   `,
+// };
 
 // --- Tool Implementations ---
 
-// Map of tool names to their executable JavaScript functions
-export const toolsImplementation: Record<string, (args: any) => any> = {
+interface GetProjectByTechArgs {
+  tech: string;
+}
+
+interface SendContactMessageArgs {
+  message: string;
+  email: string;
+}
+
+type ToolFunction = (args: unknown) => unknown;
+
+export const toolsImplementation: Record<string, ToolFunction> = {
   getProjects: () => {
     return PORTFOLIO_DATA;
   },
-  getProjectByTech: ({ tech }: { tech: string }) => {
+  getProjectByTech: (args: unknown) => {
+    const { tech } = args as GetProjectByTechArgs;
     const t = tech.toLowerCase();
     return PORTFOLIO_DATA.filter((p) =>
       p.techStack.some((stack) => stack.toLowerCase().includes(t))
@@ -65,13 +76,8 @@ export const toolsImplementation: Record<string, (args: any) => any> = {
   getContactInfo: () => {
     return CONTACT_INFO;
   },
-  sendContactMessage: ({
-    message,
-    email,
-  }: {
-    message: string;
-    email: string;
-  }) => {
+  sendContactMessage: (args: unknown) => {
+    const { message, email } = args as SendContactMessageArgs;
     // Mock sending an email
     console.log(`[MOCK EMAIL] To: Owner, From: ${email}, Body: ${message}`);
     return { success: true, message: "Message queued for delivery." };

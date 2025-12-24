@@ -1,6 +1,6 @@
 import InputBar from "@/components/InputBar";
 import ChatBubble from "@/components/ChatBubble";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { useInputBar } from "@/hooks/InputBarContext";
 import { useTheme } from "@/hooks/ThemeContext";
 import { useAgent } from "@/agent/useAgent";
@@ -17,11 +17,10 @@ const ChatWindow = ({ toggleChat }: ChatWindowProps) => {
   const sendingRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    return () => {
-      // Cleanup if needed
-    };
-  }, []);
+  const handleClose = useCallback(() => {
+    setValue("");
+    toggleChat(false);
+  }, [setValue, toggleChat]);
 
   useEffect(() => {
     const v = value && value.trim() !== "" ? value.trim() : "";
@@ -49,10 +48,7 @@ const ChatWindow = ({ toggleChat }: ChatWindowProps) => {
     <div
       className="fixed inset-0 z-40 flex items-center justify-center"
       aria-hidden="true"
-      onClick={() => {
-        setValue("");
-        toggleChat(false);
-      }}
+      onClick={handleClose}
     >
       <div className="absolute inset-0 bg-black/30 dark:bg-black/40 backdrop-blur-sm" />
 
@@ -79,10 +75,7 @@ const ChatWindow = ({ toggleChat }: ChatWindowProps) => {
               </button>
             )}
             <button
-              onClick={() => {
-                setValue("");
-                toggleChat(false);
-              }}
+              onClick={handleClose}
               className="text-xl text-gray-500 hover:text-gray-700 dark:text-gray-300"
               aria-label="Close chat"
             >

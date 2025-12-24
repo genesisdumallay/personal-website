@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@/hooks/ThemeContext";
+import React from "react";
 
 interface ExperienceCardProps {
   experienceTitle: string;
@@ -11,7 +12,7 @@ interface ExperienceCardProps {
   onToggle?: () => void;
 }
 
-const ExperienceCard = ({
+const ExperienceCard = React.memo<ExperienceCardProps>(function ExperienceCard({
   experienceTitle,
   experienceContext,
   experienceDate,
@@ -19,7 +20,7 @@ const ExperienceCard = ({
   experienceDetails,
   isExpanded = false,
   onToggle,
-}: ExperienceCardProps) => {
+}) {
   const contentRef = useRef<HTMLDivElement | null>(null);
   const [measuredHeight, setMeasuredHeight] = useState<number>(0);
   const [isHoveredOrFocused, setIsHoveredOrFocused] = useState(false);
@@ -31,9 +32,9 @@ const ExperienceCard = ({
     }
   }, [isExpanded]);
 
-  const containerClass = `flex flex-col rounded-2xl md:rounded-3xl p-10 w-full min-h-[10rem] md:max-w-none overflow-hidden border border-transparent hover:border-gray-500 transition-transform transition-colors duration-150 ease-out ${
-    isExpanded ? "md:col-span-2" : "md:max-w-[22.5rem]"
-  } ${isDark ? "bg-gray-800" : "bg-gray-100"}`;
+  const containerClass = `flex flex-col rounded-2xl md:rounded-3xl p-10 py-6 w-full min-h-[10rem] max-w-full overflow-hidden border border-transparent hover:border-gray-500 transition-transform transition-colors duration-150 ease-out ${
+    isDark ? "bg-gray-800" : "bg-[#e6e6e6]"
+  }`;
 
   return (
     <div
@@ -48,22 +49,28 @@ const ExperienceCard = ({
       onBlur={() => setIsHoveredOrFocused(false)}
       style={{ transform: isHoveredOrFocused ? "scale(1.02)" : undefined }}
     >
-      <div className="min-h-[72px]">
-        <div
-          className={`text-lg ${isDark ? "text-gray-200" : "text-gray-800"}`}
-        >
-          {experienceTitle}
+      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+        <div className="min-w-0 space-y-1">
+          <div
+            className={`text-lg ${isDark ? "text-gray-200" : "text-gray-800"}`}
+          >
+            {experienceTitle}
+          </div>
+          <div
+            className={`text-sm ${isDark ? "text-gray-200" : "text-gray-600"}`}
+          >
+            {experienceContext}
+          </div>
         </div>
-        <div
-          className={`text-sm ${isDark ? "text-gray-200" : "text-gray-600"}`}
-        >
-          {experienceContext}
-        </div>
-        <div
-          className={`text-sm ${isDark ? "text-gray-200" : "text-gray-500"}`}
-        >
-          {experienceDate}
-        </div>
+        {experienceDate && (
+          <div
+            className={`text-sm ${
+              isDark ? "text-gray-200" : "text-gray-500"
+            } whitespace-nowrap`}
+          >
+            {experienceDate}
+          </div>
+        )}
       </div>
       <div
         className={`text-sm mt-5 ${isDark ? "text-gray-200" : "text-gray-600"}`}
@@ -110,6 +117,6 @@ const ExperienceCard = ({
       </div>
     </div>
   );
-};
+});
 
 export default ExperienceCard;

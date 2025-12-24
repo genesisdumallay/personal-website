@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useTheme } from "@/hooks/ThemeContext";
 import { FaEnvelope, FaGithub, FaLinkedin } from "react-icons/fa";
 
@@ -14,11 +14,19 @@ const Footer = ({
   const [hovered, setHovered] = useState<string | null>(null);
   const iconStyle = { size: 20 };
 
+  const handleEmailClick = useCallback(() => {
+    if (onOpenContact) {
+      onOpenContact();
+    } else {
+      window.location.href = "mailto:gmdumallay007101@gmail.com";
+    }
+  }, [onOpenContact]);
+
   return (
     <div
       className={`${
         isDark ? "text-gray-200" : "text-gray-900"
-      } flex items-center justify-center gap-6 w-max mx-auto p-2 pt-4 mt-2 border-t border-gray-400`}
+      } flex flex-wrap items-center justify-center gap-4 w-full max-w-3xl mx-auto p-2 pt-4 mt-2 border-t border-gray-400`}
     >
       {[
         {
@@ -41,16 +49,10 @@ const Footer = ({
         },
       ].map((it) => {
         if (it.id === "email") {
-          // Email wrapper is relative so the ContactForm can be positioned adjacent to it
           return (
             <div key={it.id} className="relative">
               <button
-                onClick={() =>
-                  onOpenContact
-                    ? onOpenContact()
-                    : (window.location.href =
-                        "mailto:gmdumallay007101@gmail.com")
-                }
+                onClick={handleEmailClick}
                 className={`flex items-center transition-all duration-300 cursor-pointer ${
                   isContactOpen ? "opacity-0 scale-95 pointer-events-none" : ""
                 }`}
@@ -61,7 +63,9 @@ const Footer = ({
                   className={`border border-gray-500 p-1 rounded flex items-center gap-1 ml-2 transition-all duration-300`}
                 >
                   <span className="px-1">{it.icon}</span>
-                  <span className="ml-1">gmdumallay007101@gmail.com</span>
+                  <span className="ml-1 hidden sm:inline-block max-w-[200px] truncate">
+                    gmdumallay007101@gmail.com
+                  </span>
                 </span>
               </button>
 

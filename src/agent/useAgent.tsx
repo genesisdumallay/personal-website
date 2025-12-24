@@ -53,7 +53,6 @@ export const useAgent = () => {
       if (!agentRef.current) initializeAgent();
       if (!userText.trim()) return;
 
-      // 1. Add User Message to UI
       const newUserMsg: ChatMessage = {
         id: Date.now().toString(),
         role: MessageRole.USER,
@@ -66,7 +65,6 @@ export const useAgent = () => {
       setIsProcessing(true);
 
       try {
-        // 2. Delegate to the Agent class
         const responseText = await agentRef.current!.sendMessage(
           userText,
           // Callback for tool execution start
@@ -79,7 +77,6 @@ export const useAgent = () => {
           }
         );
 
-        // 3. Handle Final Response
         if (responseText) {
           const newAiMsg: ChatMessage = {
             id: (Date.now() + 1).toString(),

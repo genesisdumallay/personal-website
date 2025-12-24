@@ -7,11 +7,11 @@ type ChatBubbleProps = {
   isStreaming?: boolean;
 };
 
-export default function ChatBubble({
+const ChatBubble = React.memo<ChatBubbleProps>(function ChatBubble({
   role,
   content,
   isStreaming = false,
-}: ChatBubbleProps) {
+}) {
   const isUser = role === "user";
 
   return (
@@ -32,4 +32,6 @@ export default function ChatBubble({
       </div>
     </div>
   );
-}
+});
+
+export default ChatBubble;

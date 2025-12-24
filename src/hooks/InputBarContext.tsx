@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 
 type InputBarContextValue = {
   value: string;
@@ -10,28 +16,38 @@ type InputBarContextValue = {
   setFocused: (f: boolean) => void;
 };
 
-const InputBarContext = createContext<InputBarContextValue | undefined>(undefined);
+const InputBarContext = createContext<InputBarContextValue | undefined>(
+  undefined
+);
 
-export const InputBarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const InputBarProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [value, setValue] = useState("");
   const [focused, setFocused] = useState(false);
 
   const clear = useCallback(() => setValue(""), []);
 
-  const ctx: InputBarContextValue = {
-    value,
-    setValue,
-    clear,
-    focused,
-    setFocused,
-  };
+  const ctx: InputBarContextValue = useMemo(
+    () => ({
+      value,
+      setValue,
+      clear,
+      focused,
+      setFocused,
+    }),
+    [value, clear, focused]
+  );
 
-  return <InputBarContext.Provider value={ctx}>{children}</InputBarContext.Provider>;
+  return (
+    <InputBarContext.Provider value={ctx}>{children}</InputBarContext.Provider>
+  );
 };
 
 export function useInputBar(): InputBarContextValue {
   const ctx = useContext(InputBarContext);
-  if (!ctx) throw new Error("useInputBar must be used within an InputBarProvider");
+  if (!ctx)
+    throw new Error("useInputBar must be used within an InputBarProvider");
   return ctx;
 }
 

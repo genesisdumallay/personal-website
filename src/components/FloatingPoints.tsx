@@ -15,6 +15,7 @@ const FloatingPoints = ({ isDark = false }: FloatingPointsProps) => {
   const isMouseMovingRef = useRef(false);
   const mouseMoveTimeout = useRef<number | null>(null);
   const dimensionsRef = useRef({ width: 0, height: 0, dpr: 1 });
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -40,13 +41,17 @@ const FloatingPoints = ({ isDark = false }: FloatingPointsProps) => {
     if (!ctx) return;
 
     const dpr = Math.min(window.devicePixelRatio, 2);
-    const width = document.documentElement.clientWidth;
-    const height = document.documentElement.clientHeight * 1.1;
+    const width = window.innerWidth || document.documentElement.clientWidth;
+    const height = Math.max(
+      document.documentElement.scrollHeight,
+      document.documentElement.clientHeight
+    );
 
     dimensionsRef.current = { width, height, dpr };
+    setCanvasSize({ width, height });
 
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
+    canvas.width = Math.max(1, Math.floor(width * dpr));
+    canvas.height = Math.max(1, Math.floor(height * dpr));
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     const numParticles = isMobile ? 400 : 700;
@@ -63,7 +68,11 @@ const FloatingPoints = ({ isDark = false }: FloatingPointsProps) => {
   useEffect(() => {
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
-    return () => window.removeEventListener("resize", resizeCanvas);
+    window.addEventListener("scroll", resizeCanvas, { passive: true });
+    return () => {
+      window.removeEventListener("resize", resizeCanvas);
+      window.removeEventListener("scroll", resizeCanvas);
+    };
   }, [resizeCanvas]);
 
   useEffect(() => {
@@ -72,7 +81,7 @@ const FloatingPoints = ({ isDark = false }: FloatingPointsProps) => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const backgroundColor = isDark ? "#1e2030" : "#fafafa";
+    const backgroundColor = isDark ? "#1e2030" : "#f3f3f3ff";
     const particleColors = isDark
       ? {
           core: "rgba(200, 200, 200, 0.8)",
@@ -99,9 +108,9 @@ const FloatingPoints = ({ isDark = false }: FloatingPointsProps) => {
       ctx.fillRect(0, 0, width, height);
 
       const { x: dirX, y: dirY } = directionRef.current;
-      const speed = isMouseMovingRef.current ? 0.05 : 0.15;
-      const angleX = dirX * 0.05 * speed;
-      const angleY = dirY * 0.1 * speed;
+      const speed = isMouseMovingRef.current ? 0.03 : 0.06;
+      const angleX = dirX * 0.12 * speed;
+      const angleY = dirY * 0.12 * speed;
       const cosX = Math.cos(angleX),
         sinX = Math.sin(angleX),
         cosY = Math.cos(angleY),
@@ -169,11 +178,11 @@ const FloatingPoints = ({ isDark = false }: FloatingPointsProps) => {
       if (isMobile) return;
 
       const centerX = window.innerWidth / 2;
-      const centerY = window.innerHeight / 3;
-      directionRef.current.x +=
-        ((event.clientX - centerX) * 0.005 - directionRef.current.x) * 0.3;
-      directionRef.current.y +=
-        ((event.clientY - centerY) * 0.01 - directionRef.current.y) * 0.3;
+      const centerY = window.innerHeight / 2;
+      const targetX = (event.clientX - centerX) * 0.006;
+      const targetY = (event.clientY - centerY) * 0.006;
+      directionRef.current.x += (targetX - directionRef.current.x) * 0.6;
+      directionRef.current.y += (targetY - directionRef.current.y) * 0.6;
       isMouseMovingRef.current = true;
 
       if (mouseMoveTimeout.current !== null) {
@@ -181,7 +190,7 @@ const FloatingPoints = ({ isDark = false }: FloatingPointsProps) => {
       }
       mouseMoveTimeout.current = window.setTimeout(() => {
         isMouseMovingRef.current = false;
-      }, 50);
+      }, 100);
     },
     [isMobile]
   );
@@ -199,9 +208,9 @@ const FloatingPoints = ({ isDark = false }: FloatingPointsProps) => {
         top: 0,
         left: 0,
         width: "100%",
-        height: "100vh",
+        height: canvasSize.height ? `${canvasSize.height}px` : "100%",
         pointerEvents: "none",
-        zIndex: "-10",
+        zIndex: -10,
       }}
     />
   );

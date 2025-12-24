@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { useInputBar } from "@/hooks/InputBarContext";
 import { useTheme } from "@/hooks/ThemeContext";
 
@@ -18,12 +18,15 @@ const InputBar = ({
   const { value, setValue } = useInputBar();
   const { isDark } = useTheme();
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      if (setToggleChat) setToggleChat(true);
-      if (onSend) onSend((e.target as HTMLInputElement).value);
-    }
-  };
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        if (setToggleChat) setToggleChat(true);
+        if (onSend) onSend((e.target as HTMLInputElement).value);
+      }
+    },
+    [setToggleChat, onSend]
+  );
 
   return (
     <input

@@ -10,8 +10,8 @@ export interface ChatMessage {
   role: MessageRole;
   content: string;
   timestamp: Date;
-  toolCallId?: string; // If this message is a result of a tool call
-  toolName?: string; // Name of the tool executed
+  toolCallId?: string;
+  toolName?: string;
   isToolCall?: boolean; // If true, this message represents the agent deciding to call a tool
 }
 
@@ -20,7 +20,6 @@ export interface ToolExecutionStatus {
   toolName?: string;
 }
 
-// Representing the project data structure for our mock database
 export interface Project {
   name: string;
   techStack: string[];

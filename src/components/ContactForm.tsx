@@ -57,17 +57,29 @@ export default function ContactForm({ onClose }: { onClose?: () => void }) {
   return (
     <div className="relative z-20 w-full py-6 flex items-start justify-center">
       <div
-        className={`max-w-md w-full p-6 bg-white rounded-md shadow-lg transition-all duration-300 ${
+        className={`max-w-md w-full p-6 rounded-md transition-all duration-300 ${
           visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+        } ${
+          isDark
+            ? "bg-gray-800 border border-gray-700 text-gray-100 shadow-lg"
+            : "bg-white border border-transparent text-gray-900 shadow-lg"
         }`}
       >
         <div className="flex items-start justify-between mb-4">
-          <h2 className="text-3xl font-serif">Contact Me</h2>
+          <h2
+            className={`text-3xl font-serif ${
+              isDark ? "text-gray-100" : "text-gray-900"
+            }`}
+          >
+            Contact Me
+          </h2>
           <button
             type="button"
             onClick={() => onClose && onClose()}
             aria-label="Close"
-            className="text-xl cursor-pointer p-1 rounded"
+            className={`text-xl cursor-pointer p-1 rounded ${
+              isDark ? "text-gray-100" : "text-gray-700"
+            }`}
           >
             ✕
           </button>
@@ -75,10 +87,12 @@ export default function ContactForm({ onClose }: { onClose?: () => void }) {
 
         <div className="mb-2">
           <a
-            className="text-sm text-gray-700 no-underline cursor-pointer"
+            className={`text-sm no-underline cursor-pointer ${
+              isDark ? "text-gray-300" : "text-gray-700"
+            }`}
             href="mailto:gmdumallay007101@gmail.com"
           >
-            Use your email client
+            Or click here to use your email client
           </a>
         </div>
 

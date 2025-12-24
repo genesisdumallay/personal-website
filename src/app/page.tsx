@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import FloatingPoints from "@/components/FloatingPoints";
 import Footer from "@/components/Footer";
 import LandingPage from "@/components/LandingPage";
@@ -15,6 +15,14 @@ export default function Home() {
   const [typingText, setTypingText] = useState("");
   const [showContact, setShowContact] = useState(false);
   const contactRef = useRef<HTMLDivElement | null>(null);
+
+  const handleToggleContact = useCallback(() => {
+    setShowContact((s) => !s);
+  }, []);
+
+  const handleCloseContact = useCallback(() => {
+    setShowContact(false);
+  }, []);
 
   useEffect(() => {
     if (showContact && contactRef.current) {
@@ -47,7 +55,6 @@ export default function Home() {
       </header>
 
       <div className="pt-20 px-6">
-        {/* <div className="backdrop-blur-[2px] bg-white/10 dark:bg-black/20"> */}
         <section id="landing-page-section" className="mt-20">
           <LandingPage
             toggleChat={toggleChat}
@@ -76,7 +83,7 @@ export default function Home() {
             >
               <div className={`flex items-center gap-6 z-10`}>
                 <Footer
-                  onOpenContact={() => setShowContact((s) => !s)}
+                  onOpenContact={handleToggleContact}
                   isContactOpen={showContact}
                 />
               </div>
@@ -87,7 +94,7 @@ export default function Home() {
                   ref={contactRef}
                   className="w-full flex justify-center mt-4"
                 >
-                  <ContactForm onClose={() => setShowContact(false)} />
+                  <ContactForm onClose={handleCloseContact} />
                 </div>
               )}
             </div>

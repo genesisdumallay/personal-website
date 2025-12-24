@@ -5,6 +5,9 @@ import ThemeProvider from "@/hooks/ThemeContext";
 export const metadata = {
   title: "Genesis Dumallay",
   description: "Personal portfolio website",
+  icons: {
+    icon: "/SiteTab.svg",
+  },
 };
 
 export default function RootLayout({
@@ -13,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">  
+    <html lang="en">
       <body>
         <InputBarProvider>
           <ThemeProvider>{children}</ThemeProvider>
