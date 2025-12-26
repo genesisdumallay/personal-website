@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@/hooks/ThemeContext";
 import React from "react";
+import Image from "next/image";
 
 interface ExperienceCardProps {
   experienceTitle: string;
@@ -85,10 +86,13 @@ const ExperienceCard = React.memo<ExperienceCardProps>(function ExperienceCard({
                 key={`${tech}-${index}`}
                 className="flex flex-col items-center gap-1.5 flex-shrink-0"
               >
-                <img
+                <Image
                   src={`https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${tech.toLowerCase()}/${tech.toLowerCase()}-original.svg`}
                   alt={tech}
-                  className="h-8 w-8 tech-icon"
+                  width={32}
+                  height={32}
+                  className="tech-icon"
+                  unoptimized
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
 
