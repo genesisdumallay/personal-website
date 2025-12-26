@@ -25,3 +25,16 @@ export interface Project {
   techStack: string[];
   description: string;
 }
+
+export interface Experience {
+  _id?: string;
+  title: string;
+  context: string;
+  date: string;
+  description: string;
+  details?: string[];
+  article?: string;
+  techStack?: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
+}

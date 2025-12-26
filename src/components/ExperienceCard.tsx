@@ -8,6 +8,8 @@ interface ExperienceCardProps {
   experienceDate?: string;
   experienceDescription: string;
   experienceDetails?: string[];
+  experienceArticle?: string;
+  techStack?: string[];
   isExpanded?: boolean;
   onToggle?: () => void;
 }
@@ -18,6 +20,8 @@ const ExperienceCard = React.memo<ExperienceCardProps>(function ExperienceCard({
   experienceDate,
   experienceDescription,
   experienceDetails,
+  experienceArticle,
+  techStack,
   isExpanded = false,
   onToggle,
 }) {
@@ -72,6 +76,66 @@ const ExperienceCard = React.memo<ExperienceCardProps>(function ExperienceCard({
           </div>
         )}
       </div>
+
+      {techStack && techStack.length > 0 && (
+        <div className="relative overflow-hidden mt-4 mb-2 w-full mask-fade">
+          <div className="flex gap-8 animate-scroll w-max">
+            {[...techStack, ...techStack, ...techStack].map((tech, index) => (
+              <div
+                key={`${tech}-${index}`}
+                className="flex flex-col items-center gap-1.5 flex-shrink-0"
+              >
+                <img
+                  src={`https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${tech.toLowerCase()}/${tech.toLowerCase()}-original.svg`}
+                  alt={tech}
+                  className="h-8 w-8 tech-icon"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+
+                    const VARIANTS = [
+                      "original",
+                      "original-wordmark",
+                      "plain",
+                      "plain-wordmark",
+                      "line",
+                      "line-wordmark",
+                    ];
+
+                    const base = `https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/${tech.toLowerCase()}/${tech.toLowerCase()}-`;
+
+                    const triedRaw = target.dataset.iconTried;
+                    const tried: string[] = triedRaw
+                      ? JSON.parse(triedRaw)
+                      : [];
+
+                    const m = target.src.match(/-([a-z0-9-]+)\.svg$/i);
+                    if (m && m[1] && !tried.includes(m[1])) tried.push(m[1]);
+                    const next = VARIANTS.find((v) => !tried.includes(v));
+
+                    if (next) {
+                      tried.push(next);
+                      target.dataset.iconTried = JSON.stringify(tried);
+                      target.src = base + next + ".svg";
+                      return;
+                    }
+
+                    target.style.visibility = "hidden";
+                    target.alt = "";
+                  }}
+                />
+                <span
+                  className={`text-[10px] font-semibold uppercase tracking-tighter ${
+                    isDark ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
+                  {tech}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div
         className={`text-sm mt-5 ${isDark ? "text-gray-200" : "text-gray-600"}`}
       >
@@ -99,6 +163,16 @@ const ExperienceCard = React.memo<ExperienceCardProps>(function ExperienceCard({
             </li>
           ))}
         </ul>
+
+        {experienceArticle && (
+          <div
+            className={`mt-3 text-sm ${
+              isDark ? "text-gray-300" : "text-gray-700"
+            } whitespace-pre-line`}
+          >
+            {experienceArticle}
+          </div>
+        )}
       </div>
 
       <div className="mt-auto pt-3">

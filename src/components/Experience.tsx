@@ -1,42 +1,69 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useTheme } from "@/hooks/ThemeContext";
 import ExperienceCard from "./ExperienceCard";
 import Roadmap from "./Roadmap";
+import { Experience as ExperienceType } from "@/models/types";
 
-const EXPERIENCES = [
-  {
-    title: "Project Manager, Tech Lead",
-    context: "Thesis",
-    date: "2024 - 2025",
-    description:
-      "Lead a software development team as PM and Tech Lead, throughout software development lifecycle.",
-    details: [
-      "Developed an event recommendation application that scrapes Manila City events and recommends them based on event and in-app user data.",
-      "Designed and developed the application's system architecture. Defining system process and logic flow.",
-      "Implemented a content-based event recommender using Min-Max scaling, a weighted preference score, cosine similarity, and K-Nearest Neighbors to rank personalized events.",
-    ],
-  },
-  {
-    title: "Software Engineer Intern",
-    context: "GlobalTek BPO Inc.",
-    date: "Apr. 20, 2025 - Dec. 29, 2025",
-    description:
-      "Developed and maintained internal software apps, tools and projects",
-    details: [
-      "Refactored an entire project codebase including frontend and backend, improving codebase readability, separation of concerns, maintinability, website loading speed and performance load.",
-      "Worked with Amazon Web Services ( AWS ) in maintaining existing projects and developing and integrating agentic AI into projects and automating work processes.",
-      "Helped assure codebase quality and maintenance for company projects by developing project unit tests. Improving codebase quality, maintenance, and streamlined development flow.",
-      "Worked with a software development team using Agile methodologies, sprint planning, and code reviews to ensure timely delivery of software solutions.",
-    ],
-  },
-];
+const STORAGE_KEY = "cached_experiences";
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
 const Experience = () => {
   const { isDark } = useTheme();
+  const [experiences, setExperiences] = useState<ExperienceType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [selectedYear, setSelectedYear] = useState<number | undefined>(
     undefined
   );
+
+  useEffect(() => {
+    const fetchExperiences = async () => {
+      try {
+        const cachedData = sessionStorage.getItem(STORAGE_KEY);
+
+        if (cachedData) {
+          const { data, timestamp } = JSON.parse(cachedData);
+          const now = Date.now();
+
+          if (now - timestamp < CACHE_DURATION) {
+            setExperiences(data);
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        const response = await fetch("/api/experiences");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch experiences");
+        }
+
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          setExperiences(result.data);
+
+          sessionStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify({
+              data: result.data,
+              timestamp: Date.now(),
+            })
+          );
+        } else {
+          throw new Error("Invalid response format");
+        }
+      } catch (err) {
+        console.error("Error fetching experiences:", err);
+        setError(err instanceof Error ? err.message : "Unknown error");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchExperiences();
+  }, []);
 
   const handleYearSelect = useCallback((year: number | undefined) => {
     setSelectedYear(year === undefined ? undefined : year);
@@ -48,9 +75,9 @@ const Experience = () => {
   }, []);
 
   const filteredExperiences = useMemo(() => {
-    if (selectedYear === undefined) return EXPERIENCES;
+    if (selectedYear === undefined) return experiences;
 
-    return EXPERIENCES.filter((exp) => {
+    return experiences.filter((exp) => {
       const matches =
         exp?.date
           ?.toString()
@@ -61,7 +88,36 @@ const Experience = () => {
       const max = Math.max(...matches);
       return selectedYear >= min && selectedYear <= max;
     });
-  }, [selectedYear]);
+  }, [selectedYear, experiences]);
+
+  if (isLoading) {
+    return (
+      <div
+        className={`flex items-center justify-center min-h-[400px] ${
+          isDark ? "text-gray-200" : "text-gray-900"
+        }`}
+      >
+        <div className="text-center">
+          <div className="animate-pulse text-xl">Loading experiences...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div
+        className={`flex items-center justify-center min-h-[400px] ${
+          isDark ? "text-gray-200" : "text-gray-900"
+        }`}
+      >
+        <div className="text-center">
+          <div className="text-red-500 text-xl">Error loading experiences</div>
+          <div className="text-sm mt-2">{error}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -72,48 +128,54 @@ const Experience = () => {
       <div className="w-full max-w-[48rem] mx-auto px-4">
         <h1 className="text-4xl font-semibold mb-5 text-left">Experience</h1>
         <Roadmap
-          items={EXPERIENCES}
+          items={experiences}
           activeYear={selectedYear}
           onSelect={handleYearSelect}
         />
         <div className="flex flex-col gap-5">
           {selectedYear === undefined ? (
             expandedIndex === null ? (
-              EXPERIENCES.map((exp, idx) => (
+              experiences.map((exp, idx) => (
                 <ExperienceCard
-                  key={idx}
+                  key={exp._id || idx}
                   experienceTitle={exp.title}
                   experienceContext={exp.context}
                   experienceDate={exp.date}
                   experienceDescription={exp.description}
                   experienceDetails={exp.details}
+                  experienceArticle={exp.article}
+                  techStack={exp.techStack}
                   isExpanded={false}
                   onToggle={() => handleCardToggle(idx)}
                 />
               ))
             ) : (
               <ExperienceCard
-                key={expandedIndex}
-                experienceTitle={EXPERIENCES[expandedIndex].title}
-                experienceContext={EXPERIENCES[expandedIndex].context}
-                experienceDate={EXPERIENCES[expandedIndex].date}
-                experienceDescription={EXPERIENCES[expandedIndex].description}
-                experienceDetails={EXPERIENCES[expandedIndex].details}
+                key={experiences[expandedIndex]._id || expandedIndex}
+                experienceTitle={experiences[expandedIndex].title}
+                experienceContext={experiences[expandedIndex].context}
+                experienceDate={experiences[expandedIndex].date}
+                experienceDescription={experiences[expandedIndex].description}
+                experienceDetails={experiences[expandedIndex].details}
+                experienceArticle={experiences[expandedIndex].article}
+                techStack={experiences[expandedIndex].techStack}
                 isExpanded={true}
                 onToggle={() => handleCardToggle(expandedIndex)}
               />
             )
           ) : (
             filteredExperiences.map((exp) => {
-              const idx = EXPERIENCES.indexOf(exp);
+              const idx = experiences.indexOf(exp);
               return (
                 <ExperienceCard
-                  key={idx}
+                  key={exp._id || idx}
                   experienceTitle={exp.title}
                   experienceContext={exp.context}
                   experienceDate={exp.date}
                   experienceDescription={exp.description}
                   experienceDetails={exp.details}
+                  experienceArticle={exp.article}
+                  techStack={exp.techStack}
                   isExpanded={expandedIndex === idx}
                   onToggle={() => handleCardToggle(idx)}
                 />

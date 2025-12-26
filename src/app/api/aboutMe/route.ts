@@ -2,19 +2,6 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
-/**
- * GET /api/aboutMe
- *
- * Retrieves the personal information content from the ABOUT ME.txt file
- * This content is used to provide context about the portfolio owner
- *
- * Returns:
- * {
- *   ok: boolean,
- *   aboutMe?: string,
- *   error?: string
- * }
- */
 export async function GET() {
   try {
     const filePath = path.join(process.cwd(), "public", "ABOUT ME.txt");

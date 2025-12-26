@@ -3,7 +3,6 @@ import { useTheme } from "@/hooks/ThemeContext";
 
 interface RoadmapItem {
   date?: string | number;
-  [key: string]: unknown;
 }
 
 interface RoadmapProps {

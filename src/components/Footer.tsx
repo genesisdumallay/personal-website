@@ -68,8 +68,6 @@ const Footer = ({
                   </span>
                 </span>
               </button>
-
-              {/* Contact panel anchored here -- only rendered when open so it can't reserve space */}
             </div>
           );
         }

@@ -48,7 +48,6 @@ const Header = ({ setToggleChat }: HeaderProps) => {
           isDark ? "border-gray-700" : "border-gray-300"
         }`}
       >
-        {/* Visible toggle switch for light/dark mode */}
         <div className="flex items-center gap-2">
           <button
             onClick={toggleDark}
@@ -57,7 +56,6 @@ const Header = ({ setToggleChat }: HeaderProps) => {
               isDark ? "bg-blue-600" : "bg-gray-300"
             }`}
           >
-            {/* Sun icon on the left inside the track */}
             <FaSun
               {...iconStyle}
               className={`absolute left-1 top-1/2 transform -translate-y-1/2 pointer-events-none ${
@@ -65,15 +63,12 @@ const Header = ({ setToggleChat }: HeaderProps) => {
               }`}
             />
 
-            {/* Moon icon on the right inside the track */}
             <FaMoon
               {...iconStyle}
               className={`absolute right-1 top-1/2 transform -translate-y-1/2 pointer-events-none ${
                 isDark ? "opacity-100" : "opacity-40"
               }`}
             />
-
-            {/* Toggle knob */}
             <span
               className={`inline-block w-5 h-5 bg-white rounded-full transform transition-transform ${
                 isDark ? "translate-x-6" : "translate-x-1"

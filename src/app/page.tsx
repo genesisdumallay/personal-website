@@ -63,7 +63,6 @@ export default function Home() {
             setTypingText={setTypingText}
           ></LandingPage>
         </section>
-        {/* </div> */}
 
         <div className="bg-transparent backdrop-blur">
           <section id="about-me-section" className="mt-80">
@@ -88,7 +87,6 @@ export default function Home() {
                 />
               </div>
 
-              {/* Render ContactForm centered below the footer when open */}
               {showContact && (
                 <div
                   ref={contactRef}
