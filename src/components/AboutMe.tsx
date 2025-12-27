@@ -11,6 +11,10 @@ const AboutMe = () => {
   const fadeTimer = useRef<number | null>(null);
   const hideTimer = useRef<number | null>(null);
 
+  const FUN_FACT_IMAGE = "/icons8-github.svg";
+  const preloadLinkRef = useRef<HTMLLinkElement | null>(null);
+  const preloadedImgRef = useRef<HTMLImageElement | null>(null);
+
   const handleShow = useCallback(() => {
     if (fadeTimer.current) clearTimeout(fadeTimer.current);
     if (hideTimer.current) clearTimeout(hideTimer.current);
@@ -29,6 +33,33 @@ const AboutMe = () => {
     return () => {
       if (fadeTimer.current) clearTimeout(fadeTimer.current);
       if (hideTimer.current) clearTimeout(hideTimer.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    const href = FUN_FACT_IMAGE;
+
+    if (!document.querySelector(`link[rel="preload"][href="${href}"]`)) {
+      const link = document.createElement("link");
+      link.rel = "preload";
+      link.as = "image";
+      link.href = href;
+      document.head.appendChild(link);
+      preloadLinkRef.current = link;
+    }
+
+    const img = new window.Image();
+    img.src = href;
+    preloadedImgRef.current = img;
+
+    return () => {
+      if (preloadLinkRef.current) {
+        preloadLinkRef.current.remove();
+        preloadLinkRef.current = null;
+      }
+      preloadedImgRef.current = null;
     };
   }, []);
 
