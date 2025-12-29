@@ -13,6 +13,7 @@ interface ExperienceCardProps {
   techStack?: string[];
   isExpanded?: boolean;
   onToggle?: () => void;
+  maxTechStackLength: number;
 }
 
 const ExperienceCard = React.memo<ExperienceCardProps>(function ExperienceCard({
@@ -25,6 +26,7 @@ const ExperienceCard = React.memo<ExperienceCardProps>(function ExperienceCard({
   techStack,
   isExpanded = false,
   onToggle,
+  maxTechStackLength,
 }) {
   const contentRef = useRef<HTMLDivElement | null>(null);
   const [measuredHeight, setMeasuredHeight] = useState<number>(0);
@@ -80,7 +82,7 @@ const ExperienceCard = React.memo<ExperienceCardProps>(function ExperienceCard({
 
       {techStack && techStack.length > 0 && (
         <div className="relative overflow-hidden mt-4 mb-2 w-full mask-fade">
-          <div className="flex gap-8 animate-scroll w-max">
+          <div className="flex gap-8 animate-scroll w-max" style={{ animationDuration: `${25 * (techStack.length / maxTechStackLength)}s` }}>
             {[...techStack, ...techStack, ...techStack].map((tech, index) => (
               <div
                 key={`${tech}-${index}`}

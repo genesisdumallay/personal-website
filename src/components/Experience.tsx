@@ -90,6 +90,10 @@ const Experience = () => {
     });
   }, [selectedYear, experiences]);
 
+  const maxTechStackLength = useMemo(() => {
+    return Math.max(...experiences.map(exp => exp.techStack?.length || 0));
+  }, [experiences]);
+
   if (isLoading) {
     return (
       <div
@@ -147,6 +151,7 @@ const Experience = () => {
                   techStack={exp.techStack}
                   isExpanded={false}
                   onToggle={() => handleCardToggle(idx)}
+                  maxTechStackLength={maxTechStackLength}
                 />
               ))
             ) : (
@@ -161,6 +166,7 @@ const Experience = () => {
                 techStack={experiences[expandedIndex].techStack}
                 isExpanded={true}
                 onToggle={() => handleCardToggle(expandedIndex)}
+                maxTechStackLength={maxTechStackLength}
               />
             )
           ) : (
@@ -178,6 +184,7 @@ const Experience = () => {
                   techStack={exp.techStack}
                   isExpanded={expandedIndex === idx}
                   onToggle={() => handleCardToggle(idx)}
+                  maxTechStackLength={maxTechStackLength}
                 />
               );
             })

@@ -38,16 +38,10 @@ Software Engineer Intern | Full stack | April 20, 2025 � December 14, 2025
 Company: GlobalTek BPO Inc.
  
 What I did:
-1.	Refactored an entire project codebase including frontend and backend, improving 
-codebase readability, separation of concerns, maintainability, website loading speed and 
-performance load.
-2.	Worked with Amazon Web Services ( AWS ) in maintaining existing projects and developing, 
-automating work tasks, and integrating Agentic AI into new projects.
-3.	Helped assure codebase quality and maintenance for company projects by developing 
-project unit tests. Improving codebase quality, maintenance, and streamlined development 
-flow.
-4.	Worked with development teams using Agile methodologies to ensure efficient and timely 
-delivery of software solutions and project goals planning.
+1.	Managed and refactored application codebases, improving readability and maintainability while boosting loading speeds by 31%.
+2.	Developed and engineered AI-driven applications and agentic systems leveraging AWS cloud infrastructure, translating technical requirements into functional software while maintaining performant, cost-efficient AI solutions.
+3.	Enhanced system reliability by implementing comprehensive testing suites (Unit & E2E) using Vitest and Playwright, streamlining development workflows.
+4.	Led technical bootcamps to onboard interns, conducting structured training on development tech stack.
 
 SECTION: SKILLS
 Programming Languages: Python, JavaScript/TypeScript, Java, C++
