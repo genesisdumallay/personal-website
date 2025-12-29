@@ -152,33 +152,39 @@ export class GeminiAgent {
           message: functionResponseParts,
         });
       } catch (error) {
-        if (this.isRateLimitError(error)) {
-          console.log(
-            "[GeminiAgent] Rate limit hit during tool execution, switching model..."
-          );
-          this.switchModel();
-          try {
-            // Retry with the new model
-            response = await this.chat.sendMessage({
-              message: functionResponseParts,
-            });
-          } catch (retryError) {
-            if (this.isRateLimitError(retryError)) {
-              // Both models hit rate limits
-              throw new Error(
-                "Both models are currently rate limited. Please try again in a few moments."
-              );
-            } else {
-              throw retryError;
-            }
-          }
-        } else {
-          throw error;
-        }
+        // Don't switch models during tool execution - it breaks the conversation flow
+        console.error("[GeminiAgent] Error during tool execution:", error);
+        throw error;
       }
     }
 
-    return response.text;
+    // Return the text response, or undefined if none exists
+    console.log("[GeminiAgent] Final response:", response);
+    console.log("[GeminiAgent] Response text:", response?.text);
+    console.log(
+      "[GeminiAgent] Response candidates:",
+      JSON.stringify(response?.candidates, null, 2)
+    );
+    console.log(
+      "[GeminiAgent] Response functionCalls:",
+      response?.functionCalls
+    );
+
+    // Try to extract text from candidates if direct text access fails
+    if (!response?.text && response?.candidates?.[0]?.content?.parts) {
+      const parts = response.candidates[0].content.parts;
+      console.log(
+        "[GeminiAgent] Response parts:",
+        JSON.stringify(parts, null, 2)
+      );
+      const textPart = parts.find((part: any) => part.text);
+      if (textPart?.text) {
+        console.log("[GeminiAgent] Extracted text from parts:", textPart.text);
+        return textPart.text;
+      }
+    }
+
+    return response?.text ?? undefined;
   }
 
   getCurrentModel(): string {

@@ -13,7 +13,7 @@ interface ChatWindowProps {
 const ChatWindow = ({ toggleChat }: ChatWindowProps) => {
   const { isDark } = useTheme();
   const { messages, sendMessage, isProcessing, clearMessages } = useAgent();
-  const { value, setValue } = useInputBar();
+  const { value, setValue, clear } = useInputBar();
   const sendingRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -101,7 +101,10 @@ const ChatWindow = ({ toggleChat }: ChatWindowProps) => {
 
           <div className="pt-2">
             <InputBar
-              onSend={sendMessage}
+              onSend={(msg) => {
+                sendMessage(msg);
+                clear();
+              }}
               placeholder="Type a message and press Enter"
             />
           </div>
