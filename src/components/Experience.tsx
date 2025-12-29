@@ -91,7 +91,7 @@ const Experience = () => {
   }, [selectedYear, experiences]);
 
   const maxTechStackLength = useMemo(() => {
-    return Math.max(...experiences.map(exp => exp.techStack?.length || 0));
+    return Math.max(...experiences.map((exp) => exp.techStack?.length || 0));
   }, [experiences]);
 
   if (isLoading) {
