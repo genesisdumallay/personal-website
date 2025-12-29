@@ -14,11 +14,19 @@ export class GeminiAgent {
   private chat: Chat;
   private tools: Record<string, ToolImplementation>;
   private maxTurns: number;
+  private apiKey: string;
+  private currentModel: string;
+  private systemInstruction?: string;
+  private toolDeclarations: FunctionDeclaration[];
 
   constructor(config: AgentConfig, maxTurns: number = 5) {
     const ai = new GoogleGenAI({ apiKey: config.apiKey });
     this.tools = config.tools;
     this.maxTurns = maxTurns;
+    this.apiKey = config.apiKey;
+    this.currentModel = config.model;
+    this.systemInstruction = config.systemInstruction;
+    this.toolDeclarations = config.toolDeclarations;
 
     this.chat = ai.chats.create({
       model: config.model,
@@ -29,11 +37,71 @@ export class GeminiAgent {
     });
   }
 
+  private switchModel(): void {
+    // Toggle between gemini-2.5-flash-lite and gemini-2.5-flash
+    const newModel =
+      this.currentModel === "gemini-2.5-flash-lite"
+        ? "gemini-2.5-flash"
+        : "gemini-2.5-flash-lite";
+
+    console.log(
+      `[GeminiAgent] Switching from ${this.currentModel} to ${newModel}`
+    );
+    this.currentModel = newModel;
+
+    // Recreate the chat instance with the new model
+    const ai = new GoogleGenAI({ apiKey: this.apiKey });
+    this.chat = ai.chats.create({
+      model: this.currentModel,
+      config: {
+        systemInstruction: this.systemInstruction,
+        tools: [{ functionDeclarations: this.toolDeclarations }],
+      },
+    });
+  }
+
+  private isRateLimitError(error: unknown): boolean {
+    if (error instanceof Error) {
+      const errorMessage = error.message.toLowerCase();
+      return (
+        errorMessage.includes("rate limit") ||
+        errorMessage.includes("quota") ||
+        errorMessage.includes("429") ||
+        errorMessage.includes("resource exhausted") ||
+        errorMessage.includes("too many requests")
+      );
+    }
+    return false;
+  }
+
   async sendMessage(
     message: string,
     onToolStart?: (name: string, args: unknown) => Promise<void> | void
   ): Promise<string | undefined> {
-    let response = await this.chat.sendMessage({ message });
+    let response;
+    try {
+      response = await this.chat.sendMessage({ message });
+    } catch (error) {
+      if (this.isRateLimitError(error)) {
+        console.log("[GeminiAgent] Rate limit hit, switching model...");
+        this.switchModel();
+        try {
+          // Retry with the new model
+          response = await this.chat.sendMessage({ message });
+        } catch (retryError) {
+          if (this.isRateLimitError(retryError)) {
+            // Both models hit rate limits
+            throw new Error(
+              "Both models are currently rate limited. Please try again in a few moments."
+            );
+          } else {
+            throw retryError;
+          }
+        }
+      } else {
+        throw error;
+      }
+    }
 
     let turnCount = 0;
 
@@ -79,11 +147,41 @@ export class GeminiAgent {
         });
       }
 
-      response = await this.chat.sendMessage({
-        message: functionResponseParts,
-      });
+      try {
+        response = await this.chat.sendMessage({
+          message: functionResponseParts,
+        });
+      } catch (error) {
+        if (this.isRateLimitError(error)) {
+          console.log(
+            "[GeminiAgent] Rate limit hit during tool execution, switching model..."
+          );
+          this.switchModel();
+          try {
+            // Retry with the new model
+            response = await this.chat.sendMessage({
+              message: functionResponseParts,
+            });
+          } catch (retryError) {
+            if (this.isRateLimitError(retryError)) {
+              // Both models hit rate limits
+              throw new Error(
+                "Both models are currently rate limited. Please try again in a few moments."
+              );
+            } else {
+              throw retryError;
+            }
+          }
+        } else {
+          throw error;
+        }
+      }
     }
 
     return response.text;
+  }
+
+  getCurrentModel(): string {
+    return this.currentModel;
   }
 }

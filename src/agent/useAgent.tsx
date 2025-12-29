@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { ChatMessage, MessageRole, ToolExecutionStatus } from "../models/types";
 import { toolDeclarations, toolsImplementation } from "../agent/services/tools";
 import { GeminiAgent } from "../agent/services/geminiAgent";
@@ -8,23 +8,64 @@ import {
   clearHistory,
 } from "../utils/conversationHistory";
 
+// Constants
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_AI_STUDIO_KEY;
+const MODEL_NAME = "gemini-2.5-flash-lite";
+const TOOL_EXECUTION_DELAY = 800;
+
+const SYSTEM_INSTRUCTION = `
+You are a helpful, professional, assistant for Genesis M. Dumallay's personal website. 
+You have access to tools to find information about him. 
+If a tool doesn't return what you expect, respond with "I'm sorry but I couldn't find the information you requested."
+
+your constraints is that youre only allowed to respond to queries related to Genesis M. Dumallay.
+If a useer asks something that is not remotely related to Genesis M. Dumallay, respond with "I'm sorry but I couldn't find the information you requested."`;
+
+const ERROR_MESSAGES = {
+  NO_RESPONSE: "I processed the request but received no text response.",
+  PROCESSING_ERROR:
+    "Sorry, I encountered an error while processing your request.",
+  MISSING_API_KEY: "API_KEY is missing!",
+} as const;
+
+// Helper functions
+const generateMessageId = (offset = 0): string =>
+  (Date.now() + offset).toString();
+
+const mapHistoryRoleToMessageRole = (role: string): MessageRole => {
+  switch (role) {
+    case "assistant":
+      return MessageRole.MODEL;
+    case "user":
+      return MessageRole.USER;
+    default:
+      return MessageRole.SYSTEM;
+  }
+};
+
+const loadHistoryMessages = (): ChatMessage[] => {
+  const history = getHistory();
+  return history.map((msg, index) => ({
+    id: `hist-${index}-${Date.now()}`,
+    role: mapHistoryRoleToMessageRole(msg.role),
+    content: msg.content,
+    timestamp: new Date(msg.timestamp),
+  }));
+};
+
+const createChatMessage = (
+  role: MessageRole,
+  content: string,
+  idOffset = 0
+): ChatMessage => ({
+  id: generateMessageId(idOffset),
+  role,
+  content,
+  timestamp: new Date(),
+});
 
 export const useAgent = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    const history = getHistory();
-    return history.map((msg, index) => ({
-      id: `hist-${index}-${Date.now()}`,
-      role:
-        msg.role === "assistant"
-          ? MessageRole.MODEL
-          : msg.role === "user"
-          ? MessageRole.USER
-          : MessageRole.SYSTEM,
-      content: msg.content,
-      timestamp: new Date(msg.timestamp),
-    }));
-  });
+  const [messages, setMessages] = useState<ChatMessage[]>(loadHistoryMessages);
   const [isProcessing, setIsProcessing] = useState(false);
   const [toolStatus, setToolStatus] = useState<ToolExecutionStatus>({
     isExecuting: false,
@@ -34,92 +75,109 @@ export const useAgent = () => {
 
   const initializeAgent = useCallback(() => {
     if (!API_KEY) {
-      console.error("API_KEY is missing!");
-      return;
+      console.error(ERROR_MESSAGES.MISSING_API_KEY);
+      throw new Error(ERROR_MESSAGES.MISSING_API_KEY);
     }
 
-    agentRef.current = new GeminiAgent({
-      apiKey: API_KEY,
-      model: "gemini-2.5-flash-lite",
-      systemInstruction:
-        "You are a helpful, professional, and friendly AI assistant for a Senior Frontend Engineer's personal website. You have access to tools to find information about the engineer's projects, contact info, and availability. Always be polite and concise. If a tool doesn't return what you expect, explain that to the user. Use Markdown for formatting lists and emphasis.",
-      tools: toolsImplementation,
-      toolDeclarations: toolDeclarations,
-    });
+    if (!agentRef.current) {
+      agentRef.current = new GeminiAgent({
+        apiKey: API_KEY,
+        model: MODEL_NAME,
+        systemInstruction: SYSTEM_INSTRUCTION,
+        tools: toolsImplementation,
+        toolDeclarations: toolDeclarations,
+      });
+    }
   }, []);
+
+  const addMessage = useCallback((message: ChatMessage) => {
+    setMessages((prev) => [...prev, message]);
+  }, []);
+
+  const handleToolExecution = useCallback(
+    async (name: string, args: unknown) => {
+      console.log(`[Agent] Tool triggered: ${name}`, args);
+      setToolStatus({ isExecuting: true, toolName: name });
+      await new Promise((resolve) => setTimeout(resolve, TOOL_EXECUTION_DELAY));
+    },
+    []
+  );
+
+  const handleSuccessResponse = useCallback(
+    (responseText: string) => {
+      const newAiMsg = createChatMessage(MessageRole.MODEL, responseText, 1);
+      addMessage(newAiMsg);
+      saveMessage({ role: "assistant", content: responseText });
+    },
+    [addMessage]
+  );
+
+  const handleEmptyResponse = useCallback(() => {
+    const errorMsg = createChatMessage(
+      MessageRole.SYSTEM,
+      ERROR_MESSAGES.NO_RESPONSE,
+      1
+    );
+    addMessage(errorMsg);
+    saveMessage({ role: "system", content: ERROR_MESSAGES.NO_RESPONSE });
+  }, [addMessage]);
+
+  const handleError = useCallback(
+    (err: unknown) => {
+      console.error("Chat Error:", err);
+      const errorMsg = createChatMessage(
+        MessageRole.SYSTEM,
+        ERROR_MESSAGES.PROCESSING_ERROR
+      );
+      addMessage(errorMsg);
+      saveMessage({ role: "system", content: ERROR_MESSAGES.PROCESSING_ERROR });
+    },
+    [addMessage]
+  );
 
   const sendMessage = useCallback(
     async (userText: string) => {
-      if (!agentRef.current) initializeAgent();
-      if (!userText.trim()) return;
+      const trimmedText = userText.trim();
+      if (!trimmedText) return;
 
-      const newUserMsg: ChatMessage = {
-        id: Date.now().toString(),
-        role: MessageRole.USER,
-        content: userText,
-        timestamp: new Date(),
-      };
+      try {
+        initializeAgent();
+      } catch (error) {
+        handleError(error);
+        return;
+      }
 
-      setMessages((prev) => [...prev, newUserMsg]);
-      saveMessage({ role: "user", content: userText });
+      const newUserMsg = createChatMessage(MessageRole.USER, trimmedText);
+      addMessage(newUserMsg);
+      saveMessage({ role: "user", content: trimmedText });
       setIsProcessing(true);
 
       try {
         const responseText = await agentRef.current!.sendMessage(
-          userText,
-          // Callback for tool execution start
-          async (name, args) => {
-            console.log(`[Agent] Tool triggered: ${name}`, args);
-            setToolStatus({ isExecuting: true, toolName: name });
-
-            // Artificial delay for UI visibility (so the spinner doesn't flash too fast)
-            await new Promise((resolve) => setTimeout(resolve, 800));
-          }
+          trimmedText,
+          handleToolExecution
         );
 
         if (responseText) {
-          const newAiMsg: ChatMessage = {
-            id: (Date.now() + 1).toString(),
-            role: MessageRole.MODEL,
-            content: responseText,
-            timestamp: new Date(),
-          };
-          setMessages((prev) => [...prev, newAiMsg]);
-          saveMessage({ role: "assistant", content: responseText });
+          handleSuccessResponse(responseText);
         } else {
-          const errorMsg: ChatMessage = {
-            id: (Date.now() + 1).toString(),
-            role: MessageRole.SYSTEM,
-            content: "I processed the request but received no text response.",
-            timestamp: new Date(),
-          };
-          setMessages((prev) => [...prev, errorMsg]);
-          saveMessage({
-            role: "system",
-            content: "I processed the request but received no text response.",
-          });
+          handleEmptyResponse();
         }
       } catch (err) {
-        console.error("Chat Error:", err);
-        const errorMsg: ChatMessage = {
-          id: Date.now().toString(),
-          role: MessageRole.SYSTEM,
-          content:
-            "Sorry, I encountered an error while processing your request.",
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, errorMsg]);
-        saveMessage({
-          role: "system",
-          content:
-            "Sorry, I encountered an error while processing your request.",
-        });
+        handleError(err);
       } finally {
         setIsProcessing(false);
         setToolStatus({ isExecuting: false });
       }
     },
-    [initializeAgent]
+    [
+      initializeAgent,
+      addMessage,
+      handleToolExecution,
+      handleSuccessResponse,
+      handleEmptyResponse,
+      handleError,
+    ]
   );
 
   const clearMessages = useCallback(() => {
@@ -127,11 +185,14 @@ export const useAgent = () => {
     clearHistory();
   }, []);
 
-  return {
-    messages,
-    sendMessage,
-    isProcessing,
-    toolStatus,
-    clearMessages,
-  };
+  return useMemo(
+    () => ({
+      messages,
+      sendMessage,
+      isProcessing,
+      toolStatus,
+      clearMessages,
+    }),
+    [messages, sendMessage, isProcessing, toolStatus, clearMessages]
+  );
 };

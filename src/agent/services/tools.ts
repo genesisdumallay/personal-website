@@ -1,5 +1,6 @@
 import { FunctionDeclaration, Type } from "@google/genai";
 import { Project } from "../../models/types";
+import getAboutMe from "@/actions/getAboutMe";
 
 const PORTFOLIO_DATA: Project[] = [
   {
@@ -35,21 +36,18 @@ const CONTACT_INFO = {
   phonenumber: "+639777364652",
 };
 
-// const ABOUT_ME = {
-//   name: "Genesis M. Dumallay",
-//   Age: "23",
-//   Work_Introduction: `
-//   Hello! I am Genesis. I am based in Quezon City. I'm a software developer, with my experience primarily in web development.
-//   I am an advocate to using AI for software automation solutions.
-//   As a Software Engineer, I try to solve problems through efficient, effective and clean solutions. I prefer being in backend development, enjoying tackling technical challenges.
-
-//   `,
-//   Outside_Work_Introduction: `
-//   I love cats and I play some video games, read online media or watch animes on my free times.
-//   `,
-// };
-
-// --- Tool Implementations ---
+const ABOUT_ME = {
+  name: "Genesis M. Dumallay",
+  Age: "23",
+  Work_Introduction: `
+    Hello! I am Genesis. I am based in Quezon City. I'm a software developer, with my experience primarily in web development.
+    I am an advocate to using AI for software automation solutions.
+    As a Software Engineer, I try to solve problems through efficient, effective and clean solutions. I prefer being in backend development, enjoying tackling technical challenges.
+  `,
+  Outside_Work_Introduction: `
+    I love cats and I play some video games, read online media or watch animes on my free times.
+  `,
+};
 
 interface GetProjectByTechArgs {
   tech: string;
@@ -73,6 +71,9 @@ export const toolsImplementation: Record<string, ToolFunction> = {
       p.techStack.some((stack) => stack.toLowerCase().includes(t))
     );
   },
+  getAboutMe: () => {
+    return ABOUT_ME;
+  },
   getContactInfo: () => {
     return CONTACT_INFO;
   },
@@ -83,8 +84,6 @@ export const toolsImplementation: Record<string, ToolFunction> = {
     return { success: true, message: "Message queued for delivery." };
   },
 };
-
-// --- Tool Declarations (Schema) ---
 
 export const toolDeclarations: FunctionDeclaration[] = [
   {
@@ -110,6 +109,15 @@ export const toolDeclarations: FunctionDeclaration[] = [
         },
       },
       required: ["tech"],
+    },
+  },
+  {
+    name: "getAboutMe",
+    description:
+      "Retrieves information about the developer, including background, work introduction, and personal interests. Use this when the user asks 'Who are you?', 'Tell me about yourself', or similar questions.",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {},
     },
   },
   {

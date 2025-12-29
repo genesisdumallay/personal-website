@@ -23,22 +23,6 @@ const ChatWindow = ({ toggleChat }: ChatWindowProps) => {
   }, [setValue, toggleChat]);
 
   useEffect(() => {
-    const v = value && value.trim() !== "" ? value.trim() : "";
-    if (!v) return;
-
-    if (sendingRef.current) return;
-    sendingRef.current = true;
-
-    setValue("");
-
-    sendMessage(v).finally(() => {
-      sendingRef.current = false;
-    });
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
-
-  useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
