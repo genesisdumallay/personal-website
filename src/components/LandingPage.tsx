@@ -121,7 +121,9 @@ const LandingPage = memo(function LandingPage({
         <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
           <div
             ref={backdropRef}
-            className="absolute inset-0 backdrop-blur-3xl bg-black/60"
+            className={`absolute inset-0 backdrop-blur-3xl ${
+              isDark ? "bg-black/60" : "bg-white/20"
+            }`}
           />
           {animVisible && (
             <h1
