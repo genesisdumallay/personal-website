@@ -46,7 +46,6 @@ export default function ProjectPage({
   const flyingImageRef = useRef<HTMLDivElement>(null);
   const hasAnimated = useRef(false);
 
-  // Load transition data synchronously on first render
   const transitionDataRef = useRef<TransitionData | null>(null);
   if (transitionDataRef.current === null && typeof window !== "undefined") {
     const stored = sessionStorage.getItem("project_transition");
@@ -60,7 +59,6 @@ export default function ProjectPage({
   }
   const transitionData = transitionDataRef.current;
 
-  // Find project from dummy data
   useEffect(() => {
     const foundProject = getProjectBySlug(slug);
     if (foundProject) {
@@ -69,7 +67,6 @@ export default function ProjectPage({
     setIsLoading(false);
   }, [slug]);
 
-  // Set initial position for the flying image on first render
   useEffect(() => {
     if (!transitionData) {
       setAnimationComplete(true);
@@ -79,7 +76,6 @@ export default function ProjectPage({
     setInitialPosition(sourceRect);
   }, [transitionData]);
 
-  // Perform the animation using direct DOM manipulation
   useEffect(() => {
     if (!transitionData || !project || !initialPosition || hasAnimated.current)
       return;
@@ -92,28 +88,23 @@ export default function ProjectPage({
       return;
     }
 
-    // Wait for the flying element to be rendered at initial position
     const timer = setTimeout(() => {
       if (hasAnimated.current) return;
       hasAnimated.current = true;
 
       const endRect = finalEl.getBoundingClientRect();
       const sourceRect = initialPosition;
-
-      // Calculate deltas for transform
       const deltaX = endRect.left - sourceRect.left;
       const deltaY = endRect.top - sourceRect.top;
       const scaleX = endRect.width / sourceRect.width;
       const scaleY = endRect.height / sourceRect.height;
 
-      // Apply transition and transform
       flyingEl.style.transition =
         "transform 700ms cubic-bezier(0.2, 0.9, 0.2, 1), border-radius 700ms ease-out";
       flyingEl.style.transformOrigin = "top left";
       flyingEl.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${scaleX}, ${scaleY})`;
       flyingEl.style.borderRadius = "1rem";
 
-      // Complete animation
       setTimeout(() => {
         setAnimationComplete(true);
       }, 750);
@@ -162,7 +153,6 @@ export default function ProjectPage({
 
   return (
     <main className="relative min-h-screen">
-      {/* Flying Image - starts at source position, animates to final */}
       {transitionData &&
         project?.image &&
         initialPosition &&

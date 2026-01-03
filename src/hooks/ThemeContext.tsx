@@ -17,18 +17,16 @@ type ThemeContextType = {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const THEME_STORAGE_KEY = "theme_preference";
-const DEFAULT_THEME = true; // dark mode by default
+const DEFAULT_THEME = true;
 
 export default function ThemeProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Always start with default to prevent hydration mismatch
   const [isDark, setIsDarkState] = useState<boolean>(DEFAULT_THEME);
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Sync with localStorage after hydration
   useEffect(() => {
     const stored = localStorage.getItem(THEME_STORAGE_KEY);
     if (stored !== null) {
@@ -60,7 +58,6 @@ export default function ThemeProvider({
     [isDark, toggleDark, setIsDark]
   );
 
-  // Prevent flash by not rendering until hydrated, or use CSS to handle it
   return (
     <ThemeContext.Provider value={contextValue}>
       <div style={{ visibility: isHydrated ? "visible" : "hidden" }}>

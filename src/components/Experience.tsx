@@ -68,7 +68,6 @@ const Experience = memo(function Experience() {
     setExpandedIndex((current) => (current === idx ? null : idx));
   }, []);
 
-  // Create a map for O(1) index lookups
   const experienceIndexMap = useMemo(() => {
     const map = new Map<string | undefined, number>();
     experiences.forEach((exp, idx) => {

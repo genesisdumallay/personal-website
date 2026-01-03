@@ -8,7 +8,6 @@ import {
   clearHistory,
 } from "../utils/conversationHistory";
 
-// Constants
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_AI_STUDIO_KEY;
 const MODEL_NAME = "gemini-2.5-flash-lite";
 const TOOL_EXECUTION_DELAY = 800;
@@ -28,7 +27,6 @@ const ERROR_MESSAGES = {
   MISSING_API_KEY: "API_KEY is missing!",
 } as const;
 
-// Helper functions
 const generateMessageId = (offset = 0): string =>
   (Date.now() + offset).toString();
 
@@ -71,7 +69,6 @@ export const useAgent = () => {
     isExecuting: false,
   });
 
-  // Load persisted history on client mount only (avoids accessing sessionStorage during SSR)
   useEffect(() => {
     const initial = loadHistoryMessages();
     if (initial.length > 0) setMessages(initial);
@@ -189,7 +186,6 @@ export const useAgent = () => {
   const clearMessages = useCallback(() => {
     setMessages([]);
     clearHistory();
-    // Also clear agent's internal history
     agentRef.current?.clearHistory();
   }, []);
 

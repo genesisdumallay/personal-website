@@ -14,17 +14,15 @@ const FeaturedProjects = memo(function FeaturedProjects() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
 
-  // Duplicate projects for seamless looping
   const projects = useMemo(() => [...DUMMY_PROJECTS, ...DUMMY_PROJECTS], []);
 
-  // Auto-scroll effect
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
     let animationId: number;
     let lastTime = 0;
-    const scrollSpeed = 0.5; // pixels per frame
+    const scrollSpeed = 0.5;
 
     const animate = (currentTime: number) => {
       if (!isPaused) {
@@ -33,7 +31,6 @@ const FeaturedProjects = memo(function FeaturedProjects() {
 
         container.scrollLeft += scrollAmount;
 
-        // Reset scroll position for seamless loop
         const halfWidth = container.scrollWidth / 2;
         if (container.scrollLeft >= halfWidth) {
           container.scrollLeft = 0;
@@ -52,7 +49,6 @@ const FeaturedProjects = memo(function FeaturedProjects() {
 
   const handleNavigate = useCallback(
     (project: Project, cardRect: DOMRect, imageRect: DOMRect) => {
-      // Store transition data in sessionStorage for the destination page
       sessionStorage.setItem(
         "project_transition",
         JSON.stringify({

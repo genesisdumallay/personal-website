@@ -34,7 +34,6 @@ const AboutMe = memo(function AboutMe() {
     };
   }, []);
 
-  // Preload image
   useEffect(() => {
     if (typeof window === "undefined") return;
 

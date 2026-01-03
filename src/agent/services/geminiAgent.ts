@@ -36,8 +36,7 @@ const RATE_LIMIT_KEYWORDS = [
 
 const FALLBACK_MODEL = "gemini-2.5-flash";
 const DEFAULT_MODEL = "gemini-2.5-flash-lite";
-const MAX_HISTORY_LENGTH = 50; // Limit history to prevent token overflow
-
+const MAX_HISTORY_LENGTH = 5; 
 export class GeminiAgent {
   private chat: Chat;
   private tools: Record<string, ToolImplementation>;
@@ -77,7 +76,6 @@ export class GeminiAgent {
     this.currentModel =
       this.currentModel === DEFAULT_MODEL ? FALLBACK_MODEL : DEFAULT_MODEL;
 
-    // Recreate chat WITH history preserved
     this.chat = this.createChat(true);
   }
 
@@ -106,7 +104,6 @@ export class GeminiAgent {
 
     this.conversationHistory.push({ role, parts });
 
-    // Trim history if it exceeds max length (keep recent messages)
     if (this.conversationHistory.length > MAX_HISTORY_LENGTH) {
       this.conversationHistory = this.conversationHistory.slice(
         -MAX_HISTORY_LENGTH
@@ -118,7 +115,6 @@ export class GeminiAgent {
     message: string,
     onToolStart?: (name: string, args: unknown) => Promise<void> | void
   ): Promise<string | undefined> {
-    // Add user message to history
     this.addToHistory("user", message);
 
     let response: ChatResponse;
@@ -144,7 +140,6 @@ export class GeminiAgent {
 
     let turnCount = 0;
 
-    // Handle function calls (supports parallel execution)
     while (
       response.functionCalls &&
       response.functionCalls.length > 0 &&
@@ -153,8 +148,6 @@ export class GeminiAgent {
       turnCount++;
       const functionCalls = response.functionCalls;
       const functionResponseParts: Part[] = [];
-
-      // Execute ALL function calls in parallel when possible
       const toolPromises = functionCalls.map(async (call) => {
         const { name, args, id } = call;
 
@@ -188,7 +181,6 @@ export class GeminiAgent {
         } as Part;
       });
 
-      // Wait for all tools to complete
       const results = await Promise.all(toolPromises);
       functionResponseParts.push(...results);
 
@@ -211,7 +203,6 @@ export class GeminiAgent {
 
     const responseText = this.extractTextFromResponse(response);
 
-    // Add assistant response to history
     if (responseText) {
       this.addToHistory("model", responseText);
     }

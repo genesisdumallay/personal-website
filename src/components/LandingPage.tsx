@@ -67,8 +67,6 @@ const LandingPage = memo(function LandingPage({
     el.style.left = `${startRect.left}px`;
     el.style.top = `${startRect.top}px`;
     el.style.transform = "none";
-
-    // Force reflow
     el.getBoundingClientRect();
 
     el.style.transition = "transform 900ms cubic-bezier(.2,.9,.2,1)";

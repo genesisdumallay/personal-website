@@ -102,7 +102,6 @@ const FloatingPoints = memo(function FloatingPoints({
   );
 
   const backgroundColor = useMemo(
-    // Use a subtle translucent white in light mode so backdrop-blur has actual content to blur
     () => (isDark ? "#1e2030" : "rgba(255,255,255,0.6)"),
     [isDark]
   );
@@ -119,8 +118,7 @@ const FloatingPoints = memo(function FloatingPoints({
         animationRef.current = requestAnimationFrame(animate);
         return;
       }
-
-      // Clear then fill the canvas each frame so the backdrop-blur can operate on a consistent base
+      
       ctx.clearRect(0, 0, width, height);
       ctx.fillStyle = backgroundColor;
       ctx.fillRect(0, 0, width, height);

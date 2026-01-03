@@ -4,7 +4,6 @@ import { Collection, ObjectId, WithId, Document } from "mongodb";
 
 const COLLECTION_NAME = "experiences";
 
-// Helper function to map MongoDB document to Experience type
 const mapDocumentToExperience = (doc: WithId<Document>): Experience => ({
   _id: doc._id.toString(),
   title: doc.title,
