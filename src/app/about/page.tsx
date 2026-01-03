@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { FaReply } from "react-icons/fa";
 import { useTheme } from "@/hooks/ThemeContext";
@@ -67,6 +68,19 @@ export default function AboutPage() {
               mind and relax. I play video games, mostly gacha ones. Lastly, I
               love playing with my cat!
             </p>
+          </div>
+
+          <div className="mt-6 flex justify-start">
+            <div className="rounded-lg overflow-hidden">
+              <Image
+                src="/cat.png"
+                alt="Cat"
+                width={320}
+                height={240}
+                className="object-contain shadow-md"
+                priority
+              />
+            </div>
           </div>
         </div>
       </div>
