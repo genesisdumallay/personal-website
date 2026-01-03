@@ -85,10 +85,7 @@ const ChatWindow = memo(function ChatWindow({ toggleChat }: ChatWindowProps) {
           </div>
         </div>
 
-        <div
-          className="px-3 border-t border-gray-100 dark:border-gray-800 flex flex-col"
-          style={{ height: "420px" }}
-        >
+        <div className="px-3 border-t border-gray-100 dark:border-gray-800 flex flex-col h-[50vh] sm:h-[55vh] md:h-[60vh] lg:h-[65vh] max-h-[80vh]">
           <div ref={scrollRef} className="overflow-auto py-2 px-1 flex-1">
             {messages.length === 0 && !isProcessing && (
               <div className="text-center text-sm text-gray-500 py-4">
@@ -114,7 +111,7 @@ const ChatWindow = memo(function ChatWindow({ toggleChat }: ChatWindowProps) {
             )}
           </div>
 
-          <div className="pt-2">
+          <div className="pt-2 flex-shrink-0">
             <InputBar
               onSend={handleSend}
               placeholder="Type a message and press Enter"
