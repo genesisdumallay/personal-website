@@ -94,7 +94,7 @@ const FeaturedProjects = memo(function FeaturedProjects() {
             Things I&apos;ve worked on!
           </h2>
 
-          <Link
+          {/* <Link
             href="/projects"
             className={`flex items-center gap-2 text-sm hover:underline
               ${
@@ -104,7 +104,7 @@ const FeaturedProjects = memo(function FeaturedProjects() {
               }`}
           >
             View all <FaArrowRight className="text-xs" />
-          </Link>
+          </Link> */}
         </div>
 
         {/* Projects Container with edge fade */}
@@ -116,7 +116,8 @@ const FeaturedProjects = memo(function FeaturedProjects() {
           {/* Scrollable container with mask for edge fade */}
           <div
             ref={scrollContainerRef}
-            className="flex gap-6 overflow-x-hidden pb-4"
+            className="flex items-center justify-center py-8"
+            // className="flex gap-6 overflow-x-hidden pb-4"
             style={{
               maskImage:
                 "linear-gradient(to right, transparent, black 20px, black calc(100% - 20px), transparent)",
@@ -124,13 +125,14 @@ const FeaturedProjects = memo(function FeaturedProjects() {
                 "linear-gradient(to right, transparent, black 20px, black calc(100% - 20px), transparent)",
             }}
           >
-            {projects.map((project, idx) => (
+            {/* {projects.map((project, idx) => (
               <ProjectCard
                 key={`${project._id}-${idx}`}
                 project={project}
                 onNavigate={handleNavigate}
               />
-            ))}
+            ))} */}
+            <p className="text-center italic">In development, i just want to tell you im working on it!</p>
           </div>
         </div>
       </div>
