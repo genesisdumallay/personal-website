@@ -1,11 +1,34 @@
 "use client";
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useEffect, useRef, useCallback, useState, useMemo, memo } from "react";
 
 interface FloatingPointsProps {
   isDark?: boolean;
 }
 
-const FloatingPoints = ({ isDark = false }: FloatingPointsProps) => {
+interface ParticleColors {
+  core: string;
+  mid: string;
+  outer: string;
+  glowMultiplier: number;
+}
+
+const DARK_COLORS: ParticleColors = {
+  core: "rgba(200, 200, 200, 0.8)",
+  mid: "rgba(150, 180, 200, 0.6)",
+  outer: "rgba(50, 50, 100, 0)",
+  glowMultiplier: 2,
+};
+
+const LIGHT_COLORS: ParticleColors = {
+  core: "rgba(50, 50, 50, 0.9)",
+  mid: "rgba(30, 30, 30, 0.6)",
+  outer: "rgba(0, 0, 0, 0)",
+  glowMultiplier: 1.5,
+};
+
+const FloatingPoints = memo(function FloatingPoints({
+  isDark = false,
+}: FloatingPointsProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationRef = useRef<number | null>(null);
   const particlesRef = useRef<
@@ -20,17 +43,15 @@ const FloatingPoints = ({ isDark = false }: FloatingPointsProps) => {
 
   useEffect(() => {
     const detectMobile = () => {
-      const userAgent = navigator.userAgent.toLowerCase();
       const mobileDetected =
-        /android|iphone|ipad|opera mini|mobile/i.test(userAgent) ||
-        navigator.maxTouchPoints > 0;
-
+        /android|iphone|ipad|opera mini|mobile/i.test(
+          navigator.userAgent.toLowerCase()
+        ) || navigator.maxTouchPoints > 0;
       setIsMobile(mobileDetected);
     };
 
     detectMobile();
     window.addEventListener("resize", detectMobile);
-
     return () => window.removeEventListener("resize", detectMobile);
   }, []);
 
@@ -57,7 +78,7 @@ const FloatingPoints = ({ isDark = false }: FloatingPointsProps) => {
     const numParticles = isMobile ? 400 : 700;
     const sizeFactor = isMobile ? 0.55 : 1;
 
-    particlesRef.current = new Array(numParticles).fill(null).map(() => ({
+    particlesRef.current = Array.from({ length: numParticles }, () => ({
       x: (Math.random() - 0.5) * width * 2,
       y: (Math.random() - 0.5) * height * 1.2,
       z: Math.random() * width,
@@ -75,26 +96,21 @@ const FloatingPoints = ({ isDark = false }: FloatingPointsProps) => {
     };
   }, [resizeCanvas]);
 
+  const particleColors = useMemo(
+    () => (isDark ? DARK_COLORS : LIGHT_COLORS),
+    [isDark]
+  );
+
+  const backgroundColor = useMemo(
+    () => (isDark ? "#1e2030" : "#f3f3f3ff"),
+    [isDark]
+  );
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
-    const backgroundColor = isDark ? "#1e2030" : "#f3f3f3ff";
-    const particleColors = isDark
-      ? {
-          core: "rgba(200, 200, 200, 0.8)",
-          mid: "rgba(150, 180, 200, 0.6)",
-          outer: "rgba(50, 50, 100, 0)",
-          glowMultiplier: 2,
-        }
-      : {
-          core: "rgba(50, 50, 50, 0.9)",
-          mid: "rgba(30, 30, 30, 0.6)",
-          outer: "rgba(0, 0, 0, 0)",
-          glowMultiplier: 1.5,
-        };
 
     const animate = () => {
       const { width, height } = dimensionsRef.current;
@@ -103,7 +119,6 @@ const FloatingPoints = ({ isDark = false }: FloatingPointsProps) => {
         return;
       }
 
-      ctx.clearRect(0, 0, width, height);
       ctx.fillStyle = backgroundColor;
       ctx.fillRect(0, 0, width, height);
 
@@ -116,7 +131,12 @@ const FloatingPoints = ({ isDark = false }: FloatingPointsProps) => {
         cosY = Math.cos(angleY),
         sinY = Math.sin(angleY);
 
-      for (const p of particlesRef.current) {
+      const particles = particlesRef.current;
+      const colors = particleColors;
+
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+
         if (isMouseMovingRef.current) {
           const tempX = p.x * cosX - p.z * sinX;
           p.z = p.x * sinX + p.z * cosX;
@@ -149,11 +169,11 @@ const FloatingPoints = ({ isDark = false }: FloatingPointsProps) => {
           0,
           screenX,
           screenY,
-          size * particleColors.glowMultiplier
+          size * colors.glowMultiplier
         );
-        gradient.addColorStop(0, particleColors.core);
-        gradient.addColorStop(0.2, particleColors.mid);
-        gradient.addColorStop(1, particleColors.outer);
+        gradient.addColorStop(0, colors.core);
+        gradient.addColorStop(0.2, colors.mid);
+        gradient.addColorStop(1, colors.outer);
 
         ctx.beginPath();
         ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
@@ -171,7 +191,7 @@ const FloatingPoints = ({ isDark = false }: FloatingPointsProps) => {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [isDark]);
+  }, [backgroundColor, particleColors]);
 
   const handleMouseMove = useCallback(
     (event: MouseEvent) => {
@@ -214,6 +234,6 @@ const FloatingPoints = ({ isDark = false }: FloatingPointsProps) => {
       }}
     />
   );
-};
+});
 
 export default FloatingPoints;

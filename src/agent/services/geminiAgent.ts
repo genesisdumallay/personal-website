@@ -1,4 +1,10 @@
-import { GoogleGenAI, Chat, Part, FunctionDeclaration } from "@google/genai";
+import {
+  GoogleGenAI,
+  Chat,
+  Part,
+  FunctionDeclaration,
+  Content,
+} from "@google/genai";
 
 type ToolImplementation = (args: unknown) => Promise<unknown> | unknown;
 
@@ -10,6 +16,28 @@ export interface AgentConfig {
   toolDeclarations: FunctionDeclaration[];
 }
 
+interface ResponsePart {
+  text?: string;
+}
+
+interface ChatResponse {
+  text?: string;
+  functionCalls?: Array<{ name?: string; args?: unknown; id?: string }>;
+  candidates?: Array<{ content?: { parts?: ResponsePart[] } }>;
+}
+
+const RATE_LIMIT_KEYWORDS = [
+  "rate limit",
+  "quota",
+  "429",
+  "resource exhausted",
+  "too many requests",
+] as const;
+
+const FALLBACK_MODEL = "gemini-2.5-flash";
+const DEFAULT_MODEL = "gemini-2.5-flash-lite";
+const MAX_HISTORY_LENGTH = 50; // Limit history to prevent token overflow
+
 export class GeminiAgent {
   private chat: Chat;
   private tools: Record<string, ToolImplementation>;
@@ -18,9 +46,9 @@ export class GeminiAgent {
   private currentModel: string;
   private systemInstruction?: string;
   private toolDeclarations: FunctionDeclaration[];
+  private conversationHistory: Content[] = [];
 
   constructor(config: AgentConfig, maxTurns: number = 5) {
-    const ai = new GoogleGenAI({ apiKey: config.apiKey });
     this.tools = config.tools;
     this.maxTurns = maxTurns;
     this.apiKey = config.apiKey;
@@ -28,83 +56,95 @@ export class GeminiAgent {
     this.systemInstruction = config.systemInstruction;
     this.toolDeclarations = config.toolDeclarations;
 
-    this.chat = ai.chats.create({
-      model: config.model,
-      config: {
-        systemInstruction: config.systemInstruction,
-        tools: [{ functionDeclarations: config.toolDeclarations }],
-      },
-    });
+    this.chat = this.createChat();
   }
 
-  private switchModel(): void {
-    // Toggle between gemini-2.5-flash-lite and gemini-2.5-flash
-    const newModel =
-      this.currentModel === "gemini-2.5-flash-lite"
-        ? "gemini-2.5-flash"
-        : "gemini-2.5-flash-lite";
-
-    console.log(
-      `[GeminiAgent] Switching from ${this.currentModel} to ${newModel}`
-    );
-    this.currentModel = newModel;
-
-    // Recreate the chat instance with the new model
+  private createChat(withHistory: boolean = false): Chat {
     const ai = new GoogleGenAI({ apiKey: this.apiKey });
-    this.chat = ai.chats.create({
+    return ai.chats.create({
       model: this.currentModel,
       config: {
         systemInstruction: this.systemInstruction,
         tools: [{ functionDeclarations: this.toolDeclarations }],
       },
+      ...(withHistory && this.conversationHistory.length > 0
+        ? { history: this.conversationHistory }
+        : {}),
     });
   }
 
+  private switchModel(): void {
+    this.currentModel =
+      this.currentModel === DEFAULT_MODEL ? FALLBACK_MODEL : DEFAULT_MODEL;
+
+    // Recreate chat WITH history preserved
+    this.chat = this.createChat(true);
+  }
+
   private isRateLimitError(error: unknown): boolean {
-    if (error instanceof Error) {
-      const errorMessage = error.message.toLowerCase();
-      return (
-        errorMessage.includes("rate limit") ||
-        errorMessage.includes("quota") ||
-        errorMessage.includes("429") ||
-        errorMessage.includes("resource exhausted") ||
-        errorMessage.includes("too many requests")
+    if (!(error instanceof Error)) return false;
+
+    const errorMessage = error.message.toLowerCase();
+    return RATE_LIMIT_KEYWORDS.some((keyword) =>
+      errorMessage.includes(keyword)
+    );
+  }
+
+  private extractTextFromResponse(response: ChatResponse): string | undefined {
+    if (response?.text) return response.text;
+
+    const parts = response?.candidates?.[0]?.content?.parts;
+    if (!parts) return undefined;
+
+    const textPart = parts.find((part) => part.text);
+    return textPart?.text;
+  }
+
+  private addToHistory(role: "user" | "model", content: string | Part[]): void {
+    const parts: Part[] =
+      typeof content === "string" ? [{ text: content }] : content;
+
+    this.conversationHistory.push({ role, parts });
+
+    // Trim history if it exceeds max length (keep recent messages)
+    if (this.conversationHistory.length > MAX_HISTORY_LENGTH) {
+      this.conversationHistory = this.conversationHistory.slice(
+        -MAX_HISTORY_LENGTH
       );
     }
-    return false;
   }
 
   async sendMessage(
     message: string,
     onToolStart?: (name: string, args: unknown) => Promise<void> | void
   ): Promise<string | undefined> {
-    let response;
+    // Add user message to history
+    this.addToHistory("user", message);
+
+    let response: ChatResponse;
+
     try {
       response = await this.chat.sendMessage({ message });
     } catch (error) {
-      if (this.isRateLimitError(error)) {
-        console.log("[GeminiAgent] Rate limit hit, switching model...");
-        this.switchModel();
-        try {
-          // Retry with the new model
-          response = await this.chat.sendMessage({ message });
-        } catch (retryError) {
-          if (this.isRateLimitError(retryError)) {
-            // Both models hit rate limits
-            throw new Error(
-              "Both models are currently rate limited. Please try again in a few moments."
-            );
-          } else {
-            throw retryError;
-          }
+      if (!this.isRateLimitError(error)) throw error;
+
+      this.switchModel();
+
+      try {
+        response = await this.chat.sendMessage({ message });
+      } catch (retryError) {
+        if (this.isRateLimitError(retryError)) {
+          throw new Error(
+            "Both models are currently rate limited. Please try again in a few moments."
+          );
         }
-      } else {
-        throw error;
+        throw retryError;
       }
     }
 
     let turnCount = 0;
 
+    // Handle function calls (supports parallel execution)
     while (
       response.functionCalls &&
       response.functionCalls.length > 0 &&
@@ -114,7 +154,8 @@ export class GeminiAgent {
       const functionCalls = response.functionCalls;
       const functionResponseParts: Part[] = [];
 
-      for (const call of functionCalls) {
+      // Execute ALL function calls in parallel when possible
+      const toolPromises = functionCalls.map(async (call) => {
         const { name, args, id } = call;
 
         if (name && onToolStart) {
@@ -135,59 +176,59 @@ export class GeminiAgent {
             };
           }
         } else {
-          result = { error: "Invalid tool call" };
+          result = { error: `Unknown tool: ${name}` };
         }
 
-        functionResponseParts.push({
+        return {
           functionResponse: {
-            id: id,
-            name: name,
-            response: { result: result },
+            id,
+            name,
+            response: { result },
           },
-        });
-      }
+        } as Part;
+      });
+
+      // Wait for all tools to complete
+      const results = await Promise.all(toolPromises);
+      functionResponseParts.push(...results);
 
       try {
         response = await this.chat.sendMessage({
           message: functionResponseParts,
         });
       } catch (error) {
-        // Don't switch models during tool execution - it breaks the conversation flow
-        console.error("[GeminiAgent] Error during tool execution:", error);
-        throw error;
+        if (this.isRateLimitError(error)) {
+          this.switchModel();
+          response = await this.chat.sendMessage({
+            message: functionResponseParts,
+          });
+        } else {
+          console.error("[GeminiAgent] Error during tool execution:", error);
+          throw error;
+        }
       }
     }
 
-    // Return the text response, or undefined if none exists
-    console.log("[GeminiAgent] Final response:", response);
-    console.log("[GeminiAgent] Response text:", response?.text);
-    console.log(
-      "[GeminiAgent] Response candidates:",
-      JSON.stringify(response?.candidates, null, 2)
-    );
-    console.log(
-      "[GeminiAgent] Response functionCalls:",
-      response?.functionCalls
-    );
+    const responseText = this.extractTextFromResponse(response);
 
-    // Try to extract text from candidates if direct text access fails
-    if (!response?.text && response?.candidates?.[0]?.content?.parts) {
-      const parts = response.candidates[0].content.parts;
-      console.log(
-        "[GeminiAgent] Response parts:",
-        JSON.stringify(parts, null, 2)
-      );
-      const textPart = parts.find((part: any) => part.text);
-      if (textPart?.text) {
-        console.log("[GeminiAgent] Extracted text from parts:", textPart.text);
-        return textPart.text;
-      }
+    // Add assistant response to history
+    if (responseText) {
+      this.addToHistory("model", responseText);
     }
 
-    return response?.text ?? undefined;
+    return responseText;
   }
 
   getCurrentModel(): string {
     return this.currentModel;
+  }
+
+  getHistory(): Content[] {
+    return [...this.conversationHistory];
+  }
+
+  clearHistory(): void {
+    this.conversationHistory = [];
+    this.chat = this.createChat();
   }
 }

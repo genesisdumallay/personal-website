@@ -23,12 +23,14 @@ const InputBarContext = createContext<InputBarContextValue | undefined>(
 export const InputBarProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [value, setValue] = useState("");
-  const [focused, setFocused] = useState(false);
+  const [value, setValueState] = useState("");
+  const [focused, setFocusedState] = useState(false);
 
-  const clear = useCallback(() => setValue(""), []);
+  const setValue = useCallback((v: string) => setValueState(v), []);
+  const setFocused = useCallback((f: boolean) => setFocusedState(f), []);
+  const clear = useCallback(() => setValueState(""), []);
 
-  const ctx: InputBarContextValue = useMemo(
+  const ctx = useMemo<InputBarContextValue>(
     () => ({
       value,
       setValue,
@@ -36,7 +38,7 @@ export const InputBarProvider: React.FC<{ children: React.ReactNode }> = ({
       focused,
       setFocused,
     }),
-    [value, clear, focused]
+    [value, setValue, clear, focused, setFocused]
   );
 
   return (

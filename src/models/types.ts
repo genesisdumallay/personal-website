@@ -2,7 +2,7 @@ export enum MessageRole {
   USER = "user",
   MODEL = "model",
   SYSTEM = "system",
-  TOOL = "tool", // Internal representation for tool outputs
+  TOOL = "tool",
 }
 
 export interface ChatMessage {
@@ -12,7 +12,7 @@ export interface ChatMessage {
   timestamp: Date;
   toolCallId?: string;
   toolName?: string;
-  isToolCall?: boolean; // If true, this message represents the agent deciding to call a tool
+  isToolCall?: boolean;
 }
 
 export interface ToolExecutionStatus {
@@ -21,9 +21,23 @@ export interface ToolExecutionStatus {
 }
 
 export interface Project {
+  _id?: string;
+  slug: string;
   name: string;
-  techStack: string[];
   description: string;
+  fullDescription?: string;
+  techStack?: string[];
+  tags?: string[];
+  image?: string;
+  github?: {
+    owner: string;
+    repo: string;
+  };
+  contributors?: number;
+  date?: string;
+  featured?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface Experience {

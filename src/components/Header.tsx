@@ -1,33 +1,26 @@
-import React, { useState, useCallback} from "react";
+import React, { useCallback, useMemo, memo } from "react";
+import Link from "next/link";
 import { useTheme } from "@/hooks/ThemeContext";
-import { FaFileAlt, FaMoon, FaSun, FaUser, FaTerminal } from "react-icons/fa";
+import { FaMoon, FaSun } from "react-icons/fa";
 
 interface HeaderProps {
   setToggleChat: (v: boolean) => void;
 }
 
-const Header = ({ setToggleChat }: HeaderProps) => {
+interface NavItem {
+  id: string;
+  link: string;
+  label: string;
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
+}
+
+const Header = memo(function Header({ setToggleChat }: HeaderProps) {
   const { isDark, toggleDark } = useTheme();
-  const iconStyle = { size: 20 };
-  const [hovered, setHovered] = useState<string | null>(null);
 
   const scrollToSection = useCallback((sectionId: string) => {
     const section = document.querySelector(sectionId);
-    if (section) {
-      section.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-    }
+    section?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, []);
-
-  const handleAboutClick = useCallback(
-    (e: React.MouseEvent<HTMLAnchorElement>) => {
-      e.preventDefault();
-      scrollToSection("#about-me-section");
-    },
-    [scrollToSection]
-  );
 
   const handleExperienceClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -37,17 +30,39 @@ const Header = ({ setToggleChat }: HeaderProps) => {
     [scrollToSection]
   );
 
+  const handleChatClick = useCallback(() => {
+    setToggleChat(true);
+  }, [setToggleChat]);
+
+  const navItems: NavItem[] = useMemo(
+    () => [
+      { id: "resume", link: "/DumallayGenesis.pdf", label: "Resume" },
+      { id: "aboutme", link: "/about", label: "About" },
+      {
+        id: "experience",
+        link: "#experience-section",
+        label: "Experience",
+        onClick: handleExperienceClick,
+      },
+    ],
+    [handleExperienceClick]
+  );
+
+  const linkClassName = `text-xs sm:text-sm md:text-base font-medium transition-colors ${
+    isDark ? "hover:text-blue-400" : "hover:text-blue-600"
+  }`;
+
+  const containerClassName = `flex items-center justify-center gap-3 sm:gap-6 border rounded w-max p-1 sm:p-2 mt-3 ${
+    isDark ? "border-gray-700" : "border-gray-300"
+  }`;
+
   return (
     <div
       className={`${
         isDark ? "text-gray-200" : "text-gray-900"
-      } flex flex-row gap-2`}
+      } flex flex-row gap-2 w-full justify-center px-3 sm:px-6`}
     >
-      <div
-        className={`flex items-center justify-center gap-6 border rounded w-max p-2 mt-3 ml-auto ${
-          isDark ? "border-gray-700" : "border-gray-300"
-        }`}
-      >
+      <div className={containerClassName}>
         <div className="flex items-center gap-2">
           <button
             onClick={toggleDark}
@@ -57,103 +72,54 @@ const Header = ({ setToggleChat }: HeaderProps) => {
             }`}
           >
             <FaSun
-              {...iconStyle}
-              className={`absolute left-1 top-1/2 transform -translate-y-1/2 pointer-events-none ${
+              className={`absolute left-1 top-1/2 transform -translate-y-1/2 pointer-events-none text-[12px] sm:text-[20px] ${
                 isDark ? "opacity-40" : "opacity-100"
               }`}
             />
-
             <FaMoon
-              {...iconStyle}
-              className={`absolute right-1 top-1/2 transform -translate-y-1/2 pointer-events-none ${
+              className={`absolute right-1 top-1/2 transform -translate-y-1/2 pointer-events-none text-[12px] sm:text-[20px] ${
                 isDark ? "opacity-100" : "opacity-40"
               }`}
             />
             <span
               className={`inline-block w-5 h-5 bg-white rounded-full transform transition-transform ${
-                isDark ? "translate-x-6" : "translate-x-1"
+                isDark ? "translate-x-5 sm:translate-x-6" : "translate-x-1"
               }`}
             />
           </button>
         </div>
       </div>
-      <div
-        className={`flex items-center justify-center gap-6 border rounded w-max p-2 mt-3 mr-auto ${
-          isDark ? "border-gray-700" : "border-gray-300"
-        }`}
-      >
-        {(
-          [
-            {
-              id: "resume",
-              icon: <FaFileAlt {...iconStyle} />,
-              link: "/DumallayGenesis.pdf",
-              label: "Resume",
-            },
-            {
-              id: "aboutme",
-              icon: <FaUser {...iconStyle} />,
-              link: "#about-me-section",
-              label: "About Me",
-              onClick: handleAboutClick,
-            },
-            {
-              id: "experience",
-              icon: <FaTerminal {...iconStyle} />,
-              link: "#experience-section",
-              label: "Experience",
-              onClick: handleExperienceClick,
-            },
-          ] as Array<{
-            id: string;
-            icon: React.ReactNode;
-            link: string;
-            label: string;
-            onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
-          }>
-        ).map((it) => {
-          const isHovered = hovered === it.id;
-          return (
+      <div className={containerClassName}>
+        {navItems.map((it) =>
+          it.onClick ? (
             <a
               key={it.id}
               href={it.link}
-              onMouseEnter={() => setHovered(it.id)}
-              onMouseLeave={() => setHovered(null)}
-              onClick={(e) => it.onClick && it.onClick(e)}
-              className="flex items-center"
+              onClick={it.onClick}
+              className={linkClassName}
             >
-              <span
-                className="text-sm inline-block overflow-hidden transition-all duration-300 ease-out"
-                style={{
-                  maxWidth: isHovered ? "160px" : "0px",
-                  opacity: isHovered ? 1 : 0,
-                  transform: `translateX(${isHovered ? 0 : -4}px)`,
-                  whiteSpace: "nowrap",
-                }}
-                aria-hidden={!isHovered}
-              >
-                {it.label}
-              </span>
-              <span className={isHovered ? "ml-2" : ""}>{it.icon}</span>
+              {it.label}
             </a>
-          );
-        })}
+          ) : (
+            <Link key={it.id} href={it.link} className={linkClassName}>
+              {it.label}
+            </Link>
+          )
+        )}
 
         <button
-          className={`border-l px-3 py-1 transition-colors cursor-pointer ${
+          className={`border-l px-2 sm:px-3 py-1 text-xs sm:text-sm transition-colors cursor-pointer ${
             isDark
               ? "text-gray-200 border-gray-700 hover:bg-gray-800"
               : "text-gray-900 border-gray-300 hover:bg-gray-200"
           }`}
-          onClick={async () => {
-            setToggleChat(true);
-          }}
+          onClick={handleChatClick}
         >
           Chat
         </button>
       </div>
     </div>
   );
-};
+});
 
 export default Header;

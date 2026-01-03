@@ -1,9 +1,14 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, memo } from "react";
+import Link from "next/link";
+import { FaArrowRight } from "react-icons/fa";
 import ChatWindow from "./chatWindow";
 import TypingText from "./TypingRole";
 import InputBar from "./InputBar";
+import AboutMe from "./AboutMe";
 
 import { useTheme } from "@/hooks/ThemeContext";
+import { useInputBar } from "@/hooks/InputBarContext";
+import { useAgentContext } from "@/hooks/AgentContext";
 
 interface LandingPageProps {
   toggleChat: boolean;
@@ -12,14 +17,26 @@ interface LandingPageProps {
   setTypingText: (t: string) => void;
 }
 
-const LandingPage = ({
+const LandingPage = memo(function LandingPage({
   toggleChat,
   typingText,
   setToggleChat,
   setTypingText,
-}: LandingPageProps) => {
+}: LandingPageProps) {
   const { isDark } = useTheme();
   const [showEntrance, setShowEntrance] = useState(false);
+
+  const { sendMessage } = useAgentContext();
+  const { clear } = useInputBar();
+
+  const handleInputSend = useCallback(
+    (msg: string) => {
+      setToggleChat(true);
+      sendMessage(msg);
+      clear();
+    },
+    [setToggleChat, sendMessage, clear]
+  );
   const [entranceComplete, setEntranceComplete] = useState(false);
   const [entranceTransitionEnded, setEntranceTransitionEnded] = useState(false);
   const finalHeadingRef = useRef<HTMLHeadingElement | null>(null);
@@ -27,25 +44,7 @@ const LandingPage = ({
   const backdropRef = useRef<HTMLDivElement | null>(null);
   const [animVisible, setAnimVisible] = useState(false);
 
-  useEffect(() => {
-    const hasShownEntrance = false;
-
-    if (!hasShownEntrance) {
-      setShowEntrance(true);
-      setAnimVisible(true);
-
-      const timer = setTimeout(() => {
-        moveHeadingToFinal();
-      }, 1200);
-
-      return () => clearTimeout(timer);
-    } else {
-      setEntranceComplete(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const moveHeadingToFinal = () => {
+  const moveHeadingToFinal = useCallback(() => {
     if (!animRef.current || !finalHeadingRef.current) {
       setAnimVisible(false);
       setEntranceComplete(true);
@@ -58,8 +57,6 @@ const LandingPage = ({
     const endRect = finalHeadingRef.current.getBoundingClientRect();
     const deltaX = endRect.left - startRect.left;
     const deltaY = endRect.top - startRect.top;
-
-    // Calculate scale based on size difference
     const scale = endRect.height / startRect.height;
 
     if (backdrop) {
@@ -71,7 +68,7 @@ const LandingPage = ({
     el.style.top = `${startRect.top}px`;
     el.style.transform = "none";
 
-    // Force reflow so browser registers the new position
+    // Force reflow
     el.getBoundingClientRect();
 
     el.style.transition = "transform 900ms cubic-bezier(.2,.9,.2,1)";
@@ -80,13 +77,43 @@ const LandingPage = ({
 
     setTimeout(() => {
       setAnimVisible(false);
-      setEntranceComplete(true);
-
       setTimeout(() => {
-        setEntranceTransitionEnded(true);
-      }, 2000);
+        setEntranceComplete(true);
+        setTimeout(() => setEntranceTransitionEnded(true), 2000);
+      }, 50);
     }, 950);
-  };
+  }, []);
+
+  useEffect(() => {
+    const navigationEntries = performance.getEntriesByType(
+      "navigation"
+    ) as PerformanceNavigationTiming[];
+    const isReload =
+      navigationEntries.length > 0 && navigationEntries[0].type === "reload";
+
+    if (isReload) {
+      sessionStorage.removeItem("entrance_shown");
+    }
+
+    const entranceShown = sessionStorage.getItem("entrance_shown");
+
+    if (!entranceShown) {
+      setShowEntrance(true);
+      setAnimVisible(true);
+      sessionStorage.setItem("entrance_shown", "true");
+
+      const timer = setTimeout(moveHeadingToFinal, 1200);
+      return () => clearTimeout(timer);
+    } else {
+      setEntranceComplete(true);
+      setEntranceTransitionEnded(true);
+    }
+  }, [moveHeadingToFinal]);
+
+  const transitionClass =
+    entranceComplete && !entranceTransitionEnded
+      ? "transition-all duration-1000 ease-out"
+      : "";
 
   return (
     <>
@@ -124,30 +151,16 @@ const LandingPage = ({
       >
         {toggleChat && <ChatWindow toggleChat={setToggleChat} />}
 
-        <div
-          className={`w-full max-w-[45rem] mx-auto px-4 ${
-            entranceComplete && !entranceTransitionEnded
-              ? "transition-all duration-1000 ease-out"
-              : ""
-          }`}
-        >
-          <div
-            className={`w-full ${
-              entranceComplete && !entranceTransitionEnded
-                ? "transition-all duration-1000 ease-out"
-                : ""
-            } text-left`}
-          >
+        <div className={`w-full max-w-[48rem] mx-auto px-4 ${transitionClass}`}>
+          <div className={`w-full ${transitionClass} text-left`}>
             <h1
               ref={finalHeadingRef}
               style={{
                 visibility: showEntrance && animVisible ? "hidden" : "visible",
               }}
-              className={`font-semibold mb-2 ${
-                entranceComplete && !entranceTransitionEnded
-                  ? "transition-all duration-1000 ease-out"
-                  : ""
-              } ${isDark ? "text-gray-300" : "text-gray-800"} ${"text-6xl"}`}
+              className={`font-semibold mb-2 ${transitionClass} ${
+                isDark ? "text-gray-300" : "text-gray-800"
+              } text-6xl`}
             >
               Hi, I&#39;m Genesis!
             </h1>
@@ -163,16 +176,34 @@ const LandingPage = ({
                   : "opacity-100 translate-y-0"
               }`}
             >
-              <p className="text-2xl mt-1 mb-7 ml-1">Software Engineer</p>
-              <p className="mt-1 mb-7 ml-1">
-                Chat with my assistant if you want to know more about me and
-                explore my site with its help. (CHATBOT WORK IN PROGRESS)
+              <p className="text-2xl mt-1 mb-7 ml-1">
+                Software Engineer |{" "}
+                <Link
+                  href="/about"
+                  className="underline underline-offset-2 inline-flex items-center gap-1 text-[1.05rem]"
+                >
+                  more about me <FaArrowRight className="text-[1.05rem]" />
+                </Link>
+              </p>
+              <TypingText onChange={(t: string) => setTypingText(t)} />
+
+              <div id="about-me-section" className="mt-6 mb-6">
+                <AboutMe />
+              </div>
+
+              <p
+                className={`mt-4 mb-4 ml-1 text-sm ${
+                  isDark ? "text-gray-400" : "text-gray-700"
+                }`}
+              >
+                Chat with my assistant if you want to know more about me with
+                its help.
               </p>
 
-              <TypingText onChange={(t: string) => setTypingText(t)} />
               <InputBar
                 placeholder={typingText || "Type here..."}
                 setToggleChat={setToggleChat}
+                onSend={handleInputSend}
                 className="mx-auto block"
               />
             </div>
@@ -181,6 +212,6 @@ const LandingPage = ({
       </div>
     </>
   );
-};
+});
 
 export default LandingPage;

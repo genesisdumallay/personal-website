@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@/hooks/ThemeContext";
 import React from "react";
-import Image from "next/image";
 
 interface ExperienceCardProps {
   experienceTitle: string;
@@ -10,10 +9,8 @@ interface ExperienceCardProps {
   experienceDescription: string;
   experienceDetails?: string[];
   experienceArticle?: string;
-  techStack?: string[];
   isExpanded?: boolean;
   onToggle?: () => void;
-  maxTechStackLength: number;
 }
 
 const ExperienceCard = React.memo<ExperienceCardProps>(function ExperienceCard({
@@ -23,10 +20,8 @@ const ExperienceCard = React.memo<ExperienceCardProps>(function ExperienceCard({
   experienceDescription,
   experienceDetails,
   experienceArticle,
-  techStack,
   isExpanded = false,
   onToggle,
-  maxTechStackLength,
 }) {
   const contentRef = useRef<HTMLDivElement | null>(null);
   const [measuredHeight, setMeasuredHeight] = useState<number>(0);
@@ -39,7 +34,7 @@ const ExperienceCard = React.memo<ExperienceCardProps>(function ExperienceCard({
     }
   }, [isExpanded]);
 
-  const containerClass = `flex flex-col rounded-2xl md:rounded-3xl p-10 py-6 w-full min-h-[10rem] max-w-full overflow-hidden border border-transparent hover:border-gray-500 transition-transform transition-colors duration-150 ease-out ${
+  const containerClass = `flex flex-col rounded-2xl md:rounded-3xl p-6 md:p-10 py-6 w-full min-h-[10rem] max-w-full overflow-hidden border border-transparent hover:border-gray-500 transition-transform transition-colors duration-150 ease-out ${
     isDark ? "bg-gray-800" : "bg-[#e6e6e6]"
   }`;
 
@@ -79,75 +74,6 @@ const ExperienceCard = React.memo<ExperienceCardProps>(function ExperienceCard({
           </div>
         )}
       </div>
-
-      {techStack && techStack.length > 0 && (
-        <div className="relative overflow-hidden mt-4 mb-2 w-full mask-fade">
-          <div
-            className="flex gap-8 animate-scroll w-max"
-            style={{
-              animationDuration: `${
-                25 * (techStack.length / maxTechStackLength)
-              }s`,
-            }}
-          >
-            {[...techStack, ...techStack, ...techStack].map((tech, index) => (
-              <div
-                key={`${tech}-${index}`}
-                className="flex flex-col items-center gap-1.5 flex-shrink-0"
-              >
-                <Image
-                  src={`https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${tech.toLowerCase()}/${tech.toLowerCase()}-original.svg`}
-                  alt={tech}
-                  width={32}
-                  height={32}
-                  className="tech-icon"
-                  unoptimized
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-
-                    const VARIANTS = [
-                      "original",
-                      "original-wordmark",
-                      "plain",
-                      "plain-wordmark",
-                      "line",
-                      "line-wordmark",
-                    ];
-
-                    const base = `https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/${tech.toLowerCase()}/${tech.toLowerCase()}-`;
-
-                    const triedRaw = target.dataset.iconTried;
-                    const tried: string[] = triedRaw
-                      ? JSON.parse(triedRaw)
-                      : [];
-
-                    const m = target.src.match(/-([a-z0-9-]+)\.svg$/i);
-                    if (m && m[1] && !tried.includes(m[1])) tried.push(m[1]);
-                    const next = VARIANTS.find((v) => !tried.includes(v));
-
-                    if (next) {
-                      tried.push(next);
-                      target.dataset.iconTried = JSON.stringify(tried);
-                      target.src = base + next + ".svg";
-                      return;
-                    }
-
-                    target.style.visibility = "hidden";
-                    target.alt = "";
-                  }}
-                />
-                <span
-                  className={`text-[10px] font-semibold uppercase tracking-tighter ${
-                    isDark ? "text-gray-400" : "text-gray-500"
-                  }`}
-                >
-                  {tech}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div
         className={`text-sm mt-5 ${isDark ? "text-gray-200" : "text-gray-600"}`}

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { ChatMessage, MessageRole, ToolExecutionStatus } from "../models/types";
 import { toolDeclarations, toolsImplementation } from "../agent/services/tools";
 import { GeminiAgent } from "../agent/services/geminiAgent";
@@ -65,11 +65,17 @@ const createChatMessage = (
 });
 
 export const useAgent = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>(loadHistoryMessages);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [toolStatus, setToolStatus] = useState<ToolExecutionStatus>({
     isExecuting: false,
   });
+
+  // Load persisted history on client mount only (avoids accessing sessionStorage during SSR)
+  useEffect(() => {
+    const initial = loadHistoryMessages();
+    if (initial.length > 0) setMessages(initial);
+  }, []);
 
   const agentRef = useRef<GeminiAgent | null>(null);
 
@@ -183,6 +189,8 @@ export const useAgent = () => {
   const clearMessages = useCallback(() => {
     setMessages([]);
     clearHistory();
+    // Also clear agent's internal history
+    agentRef.current?.clearHistory();
   }, []);
 
   return useMemo(

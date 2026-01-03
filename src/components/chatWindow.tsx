@@ -1,20 +1,20 @@
 import InputBar from "@/components/InputBar";
 import ChatBubble from "@/components/ChatBubble";
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useMemo, memo } from "react";
 import { useInputBar } from "@/hooks/InputBarContext";
 import { useTheme } from "@/hooks/ThemeContext";
-import { useAgent } from "@/agent/useAgent";
+import { useAgentContext } from "@/hooks/AgentContext";
 import { MessageRole } from "@/models/types";
 
 interface ChatWindowProps {
   toggleChat: (v: boolean) => void;
 }
 
-const ChatWindow = ({ toggleChat }: ChatWindowProps) => {
+const ChatWindow = memo(function ChatWindow({ toggleChat }: ChatWindowProps) {
   const { isDark } = useTheme();
-  const { messages, sendMessage, isProcessing, clearMessages } = useAgent();
-  const { value, setValue, clear } = useInputBar();
-  const sendingRef = useRef(false);
+  const { messages, sendMessage, isProcessing, clearMessages } =
+    useAgentContext();
+  const { setValue, clear } = useInputBar();
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const handleClose = useCallback(() => {
@@ -22,11 +22,32 @@ const ChatWindow = ({ toggleChat }: ChatWindowProps) => {
     toggleChat(false);
   }, [setValue, toggleChat]);
 
+  const handleSend = useCallback(
+    (msg: string) => {
+      sendMessage(msg);
+      clear();
+    },
+    [sendMessage, clear]
+  );
+
+  const handleClear = useCallback(() => {
+    clearMessages();
+  }, [clearMessages]);
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isProcessing]);
+
+  const filteredMessages = useMemo(
+    () => messages.filter((m) => m.role !== MessageRole.TOOL),
+    [messages]
+  );
+
+  const containerClass = `relative w-11/12 max-w-2xl rounded-lg shadow-xl backdrop-blur-md border overflow-hidden z-50 ${
+    isDark ? "bg-gray-900/90 border-gray-800" : "bg-white/95 border-gray-200"
+  }`;
 
   return (
     <div
@@ -40,18 +61,14 @@ const ChatWindow = ({ toggleChat }: ChatWindowProps) => {
         role="dialog"
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
-        className={`relative w-11/12 max-w-2xl rounded-lg shadow-xl backdrop-blur-md border overflow-hidden z-50 ${
-          isDark
-            ? "bg-gray-900/90 border-gray-800"
-            : "bg-white/95 border-gray-200"
-        }`}
+        className={containerClass}
       >
         <div className="px-4 py-2 flex items-center justify-between border-b border-gray-100 dark:border-gray-800">
           <div className="font-medium">Chat</div>
           <div className="flex items-center gap-2">
             {messages.length > 0 && (
               <button
-                onClick={() => clearMessages()}
+                onClick={handleClear}
                 className="text-xs px-2 py-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
                 title={`Clear conversation (${messages.length} messages)`}
               >
@@ -79,20 +96,18 @@ const ChatWindow = ({ toggleChat }: ChatWindowProps) => {
               </div>
             )}
 
-            {messages
-              .filter((m) => m.role !== MessageRole.TOOL)
-              .map((m) => (
-                <ChatBubble
-                  key={m.id}
-                  role={
-                    m.role === MessageRole.MODEL
-                      ? "assistant"
-                      : (m.role as "user" | "system")
-                  }
-                  content={m.content}
-                  timestamp={m.timestamp.toISOString()}
-                />
-              ))}
+            {filteredMessages.map((m) => (
+              <ChatBubble
+                key={m.id}
+                role={
+                  m.role === MessageRole.MODEL
+                    ? "assistant"
+                    : (m.role as "user" | "system")
+                }
+                content={m.content}
+                timestamp={m.timestamp.toISOString()}
+              />
+            ))}
 
             {isProcessing && (
               <ChatBubble role="assistant" content="Thinking..." />
@@ -101,10 +116,7 @@ const ChatWindow = ({ toggleChat }: ChatWindowProps) => {
 
           <div className="pt-2">
             <InputBar
-              onSend={(msg) => {
-                sendMessage(msg);
-                clear();
-              }}
+              onSend={handleSend}
               placeholder="Type a message and press Enter"
             />
           </div>
@@ -112,6 +124,6 @@ const ChatWindow = ({ toggleChat }: ChatWindowProps) => {
       </div>
     </div>
   );
-};
+});
 
 export default ChatWindow;

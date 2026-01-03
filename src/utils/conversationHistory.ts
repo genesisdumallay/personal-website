@@ -6,8 +6,11 @@ export interface ChatMessage {
 
 const STORAGE_KEY = "chat_conversation_history";
 const MAX_HISTORY_LENGTH = 3; // Keep last 3 messages (user + assistant pairs)
+const isClient =
+  typeof window !== "undefined" && typeof window.sessionStorage !== "undefined";
 
 export const saveMessage = (message: Omit<ChatMessage, "timestamp">): void => {
+  if (!isClient) return;
   try {
     const history = getHistory();
     const newMessage: ChatMessage = {
@@ -18,7 +21,7 @@ export const saveMessage = (message: Omit<ChatMessage, "timestamp">): void => {
     history.push(newMessage);
     const trimmedHistory = history.slice(-MAX_HISTORY_LENGTH);
 
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(trimmedHistory));
+    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(trimmedHistory));
 
     console.debug(
       `[ConversationHistory] Saved message. History length: ${trimmedHistory.length}`
@@ -29,8 +32,9 @@ export const saveMessage = (message: Omit<ChatMessage, "timestamp">): void => {
 };
 
 export const getHistory = (): ChatMessage[] => {
+  if (!isClient) return [];
   try {
-    const stored = sessionStorage.getItem(STORAGE_KEY);
+    const stored = window.sessionStorage.getItem(STORAGE_KEY);
     if (!stored) return [];
 
     const history = JSON.parse(stored) as ChatMessage[];
@@ -64,8 +68,9 @@ export const getHistoryForAPI = (): Array<{
 };
 
 export const clearHistory = (): void => {
+  if (!isClient) return;
   try {
-    sessionStorage.removeItem(STORAGE_KEY);
+    window.sessionStorage.removeItem(STORAGE_KEY);
     console.debug("[ConversationHistory] History cleared");
   } catch (error) {
     console.error("[ConversationHistory] Failed to clear history:", error);

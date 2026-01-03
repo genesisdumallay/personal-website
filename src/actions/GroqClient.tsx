@@ -16,106 +16,85 @@ interface StreamCallbacks {
   onError?: (error: string) => void;
 }
 
-interface GroqAPIRequest {
-  messages: Message[];
-  stream?: boolean;
-}
+const DEFAULT_CLASSIFICATION: ClassificationResponse = {
+  needsPersonalInfo: true,
+  reasoning: "Default fallback",
+};
 
 const streamGroqResponse = async (
   messages: Message[],
   callbacks?: StreamCallbacks
 ): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    let fullText = "";
-    let abortController: AbortController | null = null;
+  const abortController = new AbortController();
+  let fullText = "";
 
-    try {
-      abortController = new AbortController();
+  try {
+    const response = await fetch("/api/groq", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages, stream: true }),
+      signal: abortController.signal,
+    });
 
-      const requestBody: GroqAPIRequest = {
-        messages,
-        stream: true,
-      };
-
-      fetch("/api/groq", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
-        signal: abortController.signal,
-      })
-        .then(async (response) => {
-          if (!response.ok) {
-            throw new Error(`API error: ${response.status}`);
-          }
-
-          if (!response.body) {
-            throw new Error("Response body is null");
-          }
-
-          const reader = response.body.getReader();
-          const decoder = new TextDecoder();
-
-          while (true) {
-            const { done, value } = await reader.read();
-
-            if (done) {
-              callbacks?.onComplete?.(fullText);
-              resolve(fullText);
-              break;
-            }
-
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split("\n");
-
-            for (const line of lines) {
-              if (line.startsWith("data: ")) {
-                try {
-                  const data = JSON.parse(line.slice(6));
-
-                  if (data.error) {
-                    callbacks?.onError?.(data.error);
-                    reject(new Error(data.error));
-                    return;
-                  }
-
-                  if (data.done) {
-                    callbacks?.onComplete?.(fullText);
-                    resolve(fullText);
-                    return;
-                  }
-
-                  if (data.content) {
-                    fullText += data.content;
-                    callbacks?.onChunk?.(data.content);
-                  }
-                } catch (e) {
-                  console.warn(
-                    "[streamGroqResponse] Failed to parse SSE data:",
-                    e
-                  );
-                }
-              }
-            }
-          }
-        })
-        .catch((err) => {
-          if (err.name === "AbortError") {
-            console.debug("[streamGroqResponse] Request aborted");
-            return;
-          }
-
-          const errorMsg =
-            err instanceof Error ? err.message : "Unknown error occurred";
-          callbacks?.onError?.(errorMsg);
-          reject(err);
-        });
-    } catch (err) {
-      const errorMsg =
-        err instanceof Error ? err.message : "Failed to initiate stream";
-      callbacks?.onError?.(errorMsg);
-      reject(new Error(errorMsg));
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
     }
-  });
+
+    if (!response.body) {
+      throw new Error("Response body is null");
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) {
+        callbacks?.onComplete?.(fullText);
+        break;
+      }
+
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split("\n");
+
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+
+        try {
+          const data = JSON.parse(line.slice(6));
+
+          if (data.error) {
+            callbacks?.onError?.(data.error);
+            throw new Error(data.error);
+          }
+
+          if (data.done) {
+            callbacks?.onComplete?.(fullText);
+            return fullText;
+          }
+
+          if (data.content) {
+            fullText += data.content;
+            callbacks?.onChunk?.(data.content);
+          }
+        } catch {
+          // Skip malformed SSE data
+        }
+      }
+    }
+  } catch (err) {
+    if ((err as Error).name === "AbortError") {
+      return fullText;
+    }
+
+    const errorMsg =
+      err instanceof Error ? err.message : "Unknown error occurred";
+    callbacks?.onError?.(errorMsg);
+    throw err;
+  }
+
+  return fullText;
 };
 
 const classifyUserIntent = async (
@@ -150,20 +129,9 @@ Respond ONLY with the JSON object, no other text.`;
 
   try {
     const messages: Message[] = [
-      {
-        role: "system",
-        content: classificationPrompt,
-      },
-      {
-        role: "user",
-        content: userMessage,
-      },
+      { role: "system", content: classificationPrompt },
+      { role: "user", content: userMessage },
     ];
-
-    console.debug(
-      "[classifyUserIntent] Classifying user intent for:",
-      userMessage
-    );
 
     const res = await fetch("/api/groq", {
       method: "POST",
@@ -172,36 +140,21 @@ Respond ONLY with the JSON object, no other text.`;
     });
 
     if (!res.ok) {
-      console.error(
-        "[classifyUserIntent] Classification API error:",
-        res.status
-      );
-      // Default to needing personal info if classification fails (safe fallback)
-      return {
-        needsPersonalInfo: true,
-        reasoning: "Classification failed, defaulting to safe mode",
-      };
+      return DEFAULT_CLASSIFICATION;
     }
 
     const payload = await res.json();
     const resultText = payload?.result || "";
 
-    console.debug(
-      "[classifyUserIntent] Raw classification result:",
-      resultText
-    );
-
     const jsonMatch = resultText.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]) as ClassificationResponse;
-      console.debug("[classifyUserIntent] Parsed classification:", parsed);
-      return parsed;
+      return JSON.parse(jsonMatch[0]) as ClassificationResponse;
     }
 
-    // Fallback: try to detect "needsPersonalInfo": true/false pattern
+    const lowercaseResult = resultText.toLowerCase();
     if (
-      resultText.toLowerCase().includes('"needspersonalinfo": false') ||
-      resultText.toLowerCase().includes('"needspersonalinfo":false')
+      lowercaseResult.includes('"needspersonalinfo": false') ||
+      lowercaseResult.includes('"needspersonalinfo":false')
     ) {
       return {
         needsPersonalInfo: false,
@@ -209,32 +162,12 @@ Respond ONLY with the JSON object, no other text.`;
       };
     }
 
-    // Default to requiring personal info if parsing fails
-    console.warn(
-      "[classifyUserIntent] Could not parse classification, defaulting to requiring personal info"
-    );
-    return {
-      needsPersonalInfo: true,
-      reasoning: "Failed to parse, using safe default",
-    };
-  } catch (err) {
-    console.error("[classifyUserIntent] Classification error:", err);
-    // Safe fallback: assume personal info is needed
-    return {
-      needsPersonalInfo: true,
-      reasoning: "Error occurred, using safe default",
-    };
+    return DEFAULT_CLASSIFICATION;
+  } catch {
+    return DEFAULT_CLASSIFICATION;
   }
 };
 
-/**
- * Responds to general queries that don't require personal information
- * Uses conversation history to maintain context across multiple turns
- *
- * @param userMessage - The user's query
- * @param callbacks - Optional callbacks for streaming
- * @returns AI response for general conversation
- */
 const handleGeneralQuery = async (
   userMessage: string,
   callbacks?: StreamCallbacks
@@ -251,18 +184,8 @@ Maintain context from previous messages in the conversation.`;
 
   try {
     const messages = buildMessageArray(userMessage, generalPrompt);
-
-    console.debug(
-      "[handleGeneralQuery] Sending general query with history:",
-      userMessage
-    );
-
-    const result = await streamGroqResponse(messages, callbacks);
-
-    console.debug("[handleGeneralQuery] Response completed");
-    return result;
-  } catch (err) {
-    console.error("[handleGeneralQuery] Error:", err);
+    return await streamGroqResponse(messages, callbacks);
+  } catch {
     return null;
   }
 };
@@ -272,27 +195,16 @@ const handlePersonalInfoQuery = async (
   callbacks?: StreamCallbacks
 ): Promise<string | null> => {
   try {
-    let aboutMe = "";
-    try {
-      console.debug("[handlePersonalInfoQuery] Fetching about me information");
-      const aboutRes = await fetch("/api/aboutMe");
+    const aboutRes = await fetch("/api/aboutMe");
 
-      if (aboutRes.ok) {
-        const payload = await aboutRes.json();
-        aboutMe = payload?.aboutMe || "";
-      } else {
-        console.warn(
-          "[handlePersonalInfoQuery] /api/aboutMe responded with non-OK status:",
-          aboutRes.status
-        );
-      }
-    } catch (e) {
-      console.error("[handlePersonalInfoQuery] Failed to fetch aboutMe:", e);
+    if (!aboutRes.ok) {
       return "I apologize, but I'm having trouble accessing the information right now. Please try again later.";
     }
 
+    const payload = await aboutRes.json();
+    const aboutMe = payload?.aboutMe || "";
+
     if (!aboutMe) {
-      console.warn("[handlePersonalInfoQuery] No about me content available");
       return "I apologize, but I don't have access to that information at the moment.";
     }
 
@@ -315,17 +227,8 @@ Instructions:
 8. You are NOT Genesis - you are an assistant providing information ABOUT Genesis to help visitors learn more about him.`;
 
     const messages = buildMessageArray(userMessage, personalInfoPrompt);
-
-    console.debug(
-      "[handlePersonalInfoQuery] Sending query with personal context and history"
-    );
-
-    const result = await streamGroqResponse(messages, callbacks);
-
-    console.debug("[handlePersonalInfoQuery] Response generated successfully");
-    return result;
-  } catch (err) {
-    console.error("[handlePersonalInfoQuery] Error:", err);
+    return await streamGroqResponse(messages, callbacks);
+  } catch {
     return null;
   }
 };
@@ -334,28 +237,19 @@ const runGroq = async (
   messages: Message[] = [{ role: "user", content: "Hello, how are you?" }],
   callbacks?: StreamCallbacks
 ): Promise<string | null> => {
+  const userMessage = messages[messages.length - 1]?.content?.trim() || "";
+
+  if (!userMessage) {
+    return "I didn't receive a message. How can I help you?";
+  }
+
   try {
-    const userMessage = messages[messages.length - 1]?.content || "";
-
-    if (!userMessage.trim()) {
-      console.warn("[runGroq] Empty user message received");
-      return "I didn't receive a message. How can I help you?";
-    }
-
-    console.debug("[runGroq] Processing user message:", userMessage);
     const classification = await classifyUserIntent(userMessage);
 
-    console.debug("[runGroq] Classification result:", classification);
-
-    if (classification.needsPersonalInfo) {
-      console.debug("[runGroq] Routing to personal info handler");
-      return await handlePersonalInfoQuery(userMessage, callbacks);
-    } else {
-      console.debug("[runGroq] Routing to general query handler");
-      return await handleGeneralQuery(userMessage, callbacks);
-    }
-  } catch (err) {
-    console.error("[runGroq] Orchestration error:", err);
+    return classification.needsPersonalInfo
+      ? await handlePersonalInfoQuery(userMessage, callbacks)
+      : await handleGeneralQuery(userMessage, callbacks);
+  } catch {
     return "I apologize, but I encountered an error processing your request. Please try again.";
   }
 };

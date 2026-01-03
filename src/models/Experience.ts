@@ -1,8 +1,22 @@
 import { getDatabase } from "@/lib/mongodb";
 import { Experience } from "./types";
-import { Collection, ObjectId } from "mongodb";
+import { Collection, ObjectId, WithId, Document } from "mongodb";
 
 const COLLECTION_NAME = "experiences";
+
+// Helper function to map MongoDB document to Experience type
+const mapDocumentToExperience = (doc: WithId<Document>): Experience => ({
+  _id: doc._id.toString(),
+  title: doc.title,
+  context: doc.context,
+  date: doc.date,
+  description: doc.description,
+  details: doc.details,
+  article: doc.article,
+  techStack: doc.techStack,
+  createdAt: doc.createdAt,
+  updatedAt: doc.updatedAt,
+});
 
 export class ExperienceModel {
   private static async getCollection(): Promise<Collection> {
@@ -13,39 +27,13 @@ export class ExperienceModel {
   static async findAll(): Promise<Experience[]> {
     const collection = await this.getCollection();
     const experiences = await collection.find({}).toArray();
-
-    return experiences.map((exp) => ({
-      _id: exp._id.toString(),
-      title: exp.title,
-      context: exp.context,
-      date: exp.date,
-      description: exp.description,
-      details: exp.details,
-      article: exp.article,
-      techStack: exp.techStack,
-      createdAt: exp.createdAt,
-      updatedAt: exp.updatedAt,
-    }));
+    return experiences.map(mapDocumentToExperience);
   }
 
   static async findById(id: string): Promise<Experience | null> {
     const collection = await this.getCollection();
     const experience = await collection.findOne({ _id: new ObjectId(id) });
-
-    if (!experience) return null;
-
-    return {
-      _id: experience._id.toString(),
-      title: experience.title,
-      context: experience.context,
-      date: experience.date,
-      description: experience.description,
-      details: experience.details,
-      article: experience.article,
-      techStack: experience.techStack,
-      createdAt: experience.createdAt,
-      updatedAt: experience.updatedAt,
-    };
+    return experience ? mapDocumentToExperience(experience) : null;
   }
 
   static async create(
@@ -85,19 +73,7 @@ export class ExperienceModel {
       { returnDocument: "after" }
     );
 
-    if (!result) return null;
-
-    return {
-      _id: result._id.toString(),
-      title: result.title,
-      context: result.context,
-      date: result.date,
-      description: result.description,
-      details: result.details,
-      article: result.article,
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
-    };
+    return result ? mapDocumentToExperience(result) : null;
   }
 
   static async delete(id: string): Promise<boolean> {

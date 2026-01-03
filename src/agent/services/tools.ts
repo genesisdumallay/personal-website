@@ -4,6 +4,7 @@ import getAboutMe from "@/actions/getAboutMe";
 
 const PORTFOLIO_DATA: Project[] = [
   {
+    slug: "trajector-company-handbook-chatbot",
     name: "Trajector Company Handbook Chatbot",
     techStack: [
       "AWS Lambda",
@@ -18,6 +19,7 @@ const PORTFOLIO_DATA: Project[] = [
       the chatbot's behavior is optimized to provide accurate and helpful responses based on the handbook content.`,
   },
   {
+    slug: "gatherinmanila-event-recommendation-system",
     name: "GatherInManila: A Machine Learning Powered Event Recommendation System",
     techStack: ["Python", "Flask", "sklearn"],
     description: `
@@ -68,7 +70,7 @@ export const toolsImplementation: Record<string, ToolFunction> = {
     const { tech } = args as GetProjectByTechArgs;
     const t = tech.toLowerCase();
     return PORTFOLIO_DATA.filter((p) =>
-      p.techStack.some((stack) => stack.toLowerCase().includes(t))
+      p.techStack?.some((stack) => stack.toLowerCase().includes(t))
     );
   },
   getAboutMe: () => {

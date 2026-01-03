@@ -85,14 +85,19 @@ export default function ContactForm({ onClose }: { onClose?: () => void }) {
           </button>
         </div>
 
-        <div className="mb-2">
+        <div className="mb-2 text-sm">
+          <span
+            className={`${isDark ? "text-gray-300" : "text-gray-700"} mr-1`}
+          >
+            Or
+          </span>
           <a
-            className={`text-sm no-underline cursor-pointer ${
+            className={`underline underline-offset-2 cursor-pointer ${
               isDark ? "text-gray-300" : "text-gray-700"
             }`}
             href="mailto:gmdumallay007101@gmail.com"
           >
-            Or click here to use your email client
+            click here to use your email client
           </a>
         </div>
 
@@ -163,6 +168,7 @@ export default function ContactForm({ onClose }: { onClose?: () => void }) {
 
           <button
             type="submit"
+            style={{ color: isDark ? "black" : undefined }}
             className={`px-6 py-2 rounded cursor-pointer hover:opacity-90 transition ${
               isDark ? "bg-gray-200 text-black" : "bg-gray-800 text-white"
             }`}

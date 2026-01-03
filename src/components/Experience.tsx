@@ -1,13 +1,13 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, memo } from "react";
 import { useTheme } from "@/hooks/ThemeContext";
 import ExperienceCard from "./ExperienceCard";
 import Roadmap from "./Roadmap";
 import { Experience as ExperienceType } from "@/models/types";
 
 const STORAGE_KEY = "cached_experiences";
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const CACHE_DURATION = 24 * 60 * 60 * 1000;
 
-const Experience = () => {
+const Experience = memo(function Experience() {
   const { isDark } = useTheme();
   const [experiences, setExperiences] = useState<ExperienceType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,9 +24,7 @@ const Experience = () => {
 
         if (cachedData) {
           const { data, timestamp } = JSON.parse(cachedData);
-          const now = Date.now();
-
-          if (now - timestamp < CACHE_DURATION) {
+          if (Date.now() - timestamp < CACHE_DURATION) {
             setExperiences(data);
             setIsLoading(false);
             return;
@@ -43,13 +41,9 @@ const Experience = () => {
 
         if (result.success && result.data) {
           setExperiences(result.data);
-
           sessionStorage.setItem(
             STORAGE_KEY,
-            JSON.stringify({
-              data: result.data,
-              timestamp: Date.now(),
-            })
+            JSON.stringify({ data: result.data, timestamp: Date.now() })
           );
         } else {
           throw new Error("Invalid response format");
@@ -66,13 +60,22 @@ const Experience = () => {
   }, []);
 
   const handleYearSelect = useCallback((year: number | undefined) => {
-    setSelectedYear(year === undefined ? undefined : year);
+    setSelectedYear(year);
     setExpandedIndex(null);
   }, []);
 
   const handleCardToggle = useCallback((idx: number) => {
     setExpandedIndex((current) => (current === idx ? null : idx));
   }, []);
+
+  // Create a map for O(1) index lookups
+  const experienceIndexMap = useMemo(() => {
+    const map = new Map<string | undefined, number>();
+    experiences.forEach((exp, idx) => {
+      map.set(exp._id, idx);
+    });
+    return map;
+  }, [experiences]);
 
   const filteredExperiences = useMemo(() => {
     if (selectedYear === undefined) return experiences;
@@ -90,16 +93,12 @@ const Experience = () => {
     });
   }, [selectedYear, experiences]);
 
-  const maxTechStackLength = useMemo(() => {
-    return Math.max(...experiences.map((exp) => exp.techStack?.length || 0));
-  }, [experiences]);
+  const textColorClass = isDark ? "text-gray-200" : "text-gray-900";
 
   if (isLoading) {
     return (
       <div
-        className={`flex items-center justify-center min-h-[400px] ${
-          isDark ? "text-gray-200" : "text-gray-900"
-        }`}
+        className={`flex items-center justify-center min-h-[400px] ${textColorClass}`}
       >
         <div className="text-center">
           <div className="animate-pulse text-xl">Loading experiences...</div>
@@ -111,9 +110,7 @@ const Experience = () => {
   if (error) {
     return (
       <div
-        className={`flex items-center justify-center min-h-[400px] ${
-          isDark ? "text-gray-200" : "text-gray-900"
-        }`}
+        className={`flex items-center justify-center min-h-[400px] ${textColorClass}`}
       >
         <div className="text-center">
           <div className="text-red-500 text-xl">Error loading experiences</div>
@@ -123,76 +120,86 @@ const Experience = () => {
     );
   }
 
-  return (
-    <div
-      className={`flex items-center justify-center ${
-        isDark ? "text-gray-200" : "text-gray-900"
-      }`}
-    >
-      <div className="w-full max-w-[48rem] mx-auto px-4">
-        <h1 className="text-4xl font-semibold mb-5 text-left">Experience</h1>
-        <Roadmap
-          items={experiences}
-          activeYear={selectedYear}
-          onSelect={handleYearSelect}
+  const renderExperienceCards = () => {
+    if (selectedYear === undefined) {
+      if (expandedIndex === null) {
+        return experiences.map((exp, idx) => (
+          <ExperienceCard
+            key={exp._id || idx}
+            experienceTitle={exp.title}
+            experienceContext={exp.context}
+            experienceDate={exp.date}
+            experienceDescription={exp.description}
+            experienceDetails={exp.details}
+            experienceArticle={exp.article}
+            isExpanded={false}
+            onToggle={() => handleCardToggle(idx)}
+          />
+        ));
+      }
+
+      const exp = experiences[expandedIndex];
+      return (
+        <ExperienceCard
+          key={exp._id || expandedIndex}
+          experienceTitle={exp.title}
+          experienceContext={exp.context}
+          experienceDate={exp.date}
+          experienceDescription={exp.description}
+          experienceDetails={exp.details}
+          experienceArticle={exp.article}
+          isExpanded={true}
+          onToggle={() => handleCardToggle(expandedIndex)}
         />
-        <div className="flex flex-col gap-5">
-          {selectedYear === undefined ? (
-            expandedIndex === null ? (
-              experiences.map((exp, idx) => (
-                <ExperienceCard
-                  key={exp._id || idx}
-                  experienceTitle={exp.title}
-                  experienceContext={exp.context}
-                  experienceDate={exp.date}
-                  experienceDescription={exp.description}
-                  experienceDetails={exp.details}
-                  experienceArticle={exp.article}
-                  techStack={exp.techStack}
-                  isExpanded={false}
-                  onToggle={() => handleCardToggle(idx)}
-                  maxTechStackLength={maxTechStackLength}
-                />
-              ))
-            ) : (
-              <ExperienceCard
-                key={experiences[expandedIndex]._id || expandedIndex}
-                experienceTitle={experiences[expandedIndex].title}
-                experienceContext={experiences[expandedIndex].context}
-                experienceDate={experiences[expandedIndex].date}
-                experienceDescription={experiences[expandedIndex].description}
-                experienceDetails={experiences[expandedIndex].details}
-                experienceArticle={experiences[expandedIndex].article}
-                techStack={experiences[expandedIndex].techStack}
-                isExpanded={true}
-                onToggle={() => handleCardToggle(expandedIndex)}
-                maxTechStackLength={maxTechStackLength}
-              />
-            )
-          ) : (
-            filteredExperiences.map((exp) => {
-              const idx = experiences.indexOf(exp);
-              return (
-                <ExperienceCard
-                  key={exp._id || idx}
-                  experienceTitle={exp.title}
-                  experienceContext={exp.context}
-                  experienceDate={exp.date}
-                  experienceDescription={exp.description}
-                  experienceDetails={exp.details}
-                  experienceArticle={exp.article}
-                  techStack={exp.techStack}
-                  isExpanded={expandedIndex === idx}
-                  onToggle={() => handleCardToggle(idx)}
-                  maxTechStackLength={maxTechStackLength}
-                />
-              );
-            })
-          )}
+      );
+    }
+
+    return filteredExperiences.map((exp) => {
+      const idx = experienceIndexMap.get(exp._id) ?? -1;
+      return (
+        <ExperienceCard
+          key={exp._id || idx}
+          experienceTitle={exp.title}
+          experienceContext={exp.context}
+          experienceDate={exp.date}
+          experienceDescription={exp.description}
+          experienceDetails={exp.details}
+          experienceArticle={exp.article}
+          isExpanded={expandedIndex === idx}
+          onToggle={() => handleCardToggle(idx)}
+        />
+      );
+    });
+  };
+
+  return (
+    <div className={`flex items-center justify-center ${textColorClass}`}>
+      <div className="w-full max-w-[48rem] mx-auto px-4 sm:px-6">
+        <h1 className="text-4xl font-semibold mb-8 text-left">Experience</h1>
+        <div className="lg:hidden mb-8 flex justify-center">
+          <Roadmap
+            items={experiences}
+            activeYear={selectedYear}
+            onSelect={handleYearSelect}
+            orientation="horizontal"
+          />
+        </div>
+        <div className="flex gap-6 relative">
+          <div className="flex-1 flex flex-col gap-5 items-center lg:items-stretch">
+            {renderExperienceCards()}
+          </div>
+          <div className="hidden lg:block">
+            <Roadmap
+              items={experiences}
+              activeYear={selectedYear}
+              onSelect={handleYearSelect}
+              orientation="vertical"
+            />
+          </div>
         </div>
       </div>
     </div>
   );
-};
+});
 
 export default Experience;

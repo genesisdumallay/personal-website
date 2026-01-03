@@ -1,11 +1,10 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
-import FloatingPoints from "@/components/FloatingPoints";
 import Footer from "@/components/Footer";
 import LandingPage from "@/components/LandingPage";
 import Header from "@/components/Header";
-import AboutMe from "@/components/AboutMe";
 import Experience from "@/components/Experience";
+import FeaturedProjects from "@/components/FeaturedProjects";
 import ContactForm from "@/components/ContactForm";
 import { useTheme } from "@/hooks/ThemeContext";
 
@@ -44,10 +43,6 @@ export default function Home() {
 
   return (
     <main className="relative min-h-screen font-sans">
-      <div className="absolute inset-0 -z-10">
-        <FloatingPoints isDark={isDark} />
-      </div>
-
       <header className="sticky top-0 left-0 right-0 z-50 backdrop-blur-sm">
         <div className="px-6 pt-3">
           <Header setToggleChat={setToggleChat} />
@@ -65,12 +60,12 @@ export default function Home() {
         </section>
 
         <div className="bg-transparent backdrop-blur">
-          <section id="about-me-section" className="mt-80">
-            <AboutMe />
-          </section>
-
           <section id="experience-section" className="mt-30">
             <Experience />
+          </section>
+
+          <section id="projects-section" className="mt-20">
+            <FeaturedProjects />
           </section>
 
           <section

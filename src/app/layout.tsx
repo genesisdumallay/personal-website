@@ -1,6 +1,8 @@
 import "./globals.css";
 import InputBarProvider from "@/hooks/InputBarContext";
 import ThemeProvider from "@/hooks/ThemeContext";
+import AgentProvider from "@/hooks/AgentContext";
+import AppBackground from "@/components/AppBackground";
 
 export const metadata = {
   title: "Genesis Dumallay",
@@ -19,7 +21,12 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <InputBarProvider>
-          <ThemeProvider>{children}</ThemeProvider>
+          <AgentProvider>
+            <ThemeProvider>
+              <AppBackground />
+              {children}
+            </ThemeProvider>
+          </AgentProvider>
         </InputBarProvider>
       </body>
     </html>
