@@ -119,9 +119,7 @@ const LandingPage = memo(function LandingPage({
         <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
           <div
             ref={backdropRef}
-            className={`absolute inset-0 backdrop-blur-3xl ${
-              isDark ? "bg-black/60" : "bg-white/20"
-            }`}
+            className={`absolute inset-0 backdrop-blur-3xl bg-[var(--backdrop-bg)]`}
           />
           {animVisible && (
             <h1
@@ -134,9 +132,7 @@ const LandingPage = memo(function LandingPage({
                 zIndex: 60,
                 willChange: "transform",
               }}
-              className={`font-semibold mb-2 ${
-                isDark ? "text-gray-300" : "text-gray-800"
-              } text-6xl`}
+              className={`font-semibold mb-2 text-[var(--site-heading)] text-6xl`}
             >
               Hi, I&#39;m Genesis!
             </h1>
@@ -145,9 +141,7 @@ const LandingPage = memo(function LandingPage({
       )}
 
       <div
-        className={`flex items-center justify-center ${
-          isDark ? "text-gray-200" : "text-gray-900"
-        }`}
+        className={`flex items-center justify-center text-[var(--site-text)]`}
       >
         {toggleChat && <ChatWindow toggleChat={setToggleChat} />}
 
@@ -158,9 +152,7 @@ const LandingPage = memo(function LandingPage({
               style={{
                 visibility: showEntrance && animVisible ? "hidden" : "visible",
               }}
-              className={`font-semibold mb-2 ${transitionClass} ${
-                isDark ? "text-gray-300" : "text-gray-800"
-              } text-6xl`}
+              className={`font-semibold mb-2 ${transitionClass} text-[var(--site-heading)] text-6xl`}
             >
               Hi, I&#39;m Genesis!
             </h1>
@@ -192,9 +184,7 @@ const LandingPage = memo(function LandingPage({
               </div>
 
               <p
-                className={`mt-4 mb-4 ml-1 text-sm ${
-                  isDark ? "text-gray-400" : "text-gray-700"
-                }`}
+                className={`mt-4 mb-4 ml-1 text-sm text-[var(--site-text)] opacity-80`}
               >
                 Chat with my assistant if you want to know more about me with
                 its help.

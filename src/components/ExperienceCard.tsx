@@ -34,9 +34,7 @@ const ExperienceCard = React.memo<ExperienceCardProps>(function ExperienceCard({
     }
   }, [isExpanded]);
 
-  const containerClass = `flex flex-col rounded-2xl md:rounded-3xl p-6 md:p-10 py-6 w-full min-h-[10rem] max-w-full overflow-hidden border border-transparent hover:border-gray-500 transition-transform transition-colors duration-150 ease-out ${
-    isDark ? "bg-gray-800" : "bg-[#e6e6e6]"
-  }`;
+  const containerClass = `flex flex-col rounded-2xl md:rounded-3xl p-6 md:p-10 py-6 w-full min-h-[10rem] max-w-full overflow-hidden border border-transparent hover:border-gray-500 transition-transform transition-colors duration-150 ease-out bg-[var(--card-bg)] force-card`;
 
   return (
     <div
@@ -87,7 +85,7 @@ const ExperienceCard = React.memo<ExperienceCardProps>(function ExperienceCard({
           transition: isExpanded ? "max-height 500ms ease" : undefined,
           overflow: "hidden",
         }}
-        className="text-gray-600 mt-2"
+        className={`${isDark ? "text-gray-300" : "text-gray-600"} mt-2`}
         aria-hidden={!isExpanded}
       >
         <ul className="list-disc list-outside pl-5 space-y-1 text-sm">

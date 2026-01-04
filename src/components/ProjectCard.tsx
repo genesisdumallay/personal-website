@@ -56,14 +56,14 @@ const ProjectCard = memo(function ProjectCard({
       className={`flex flex-col rounded-2xl p-5 w-[380px] min-w-[380px] cursor-pointer
         border border-transparent hover:border-gray-500
         transition-all duration-200 ease-out
-        ${isDark ? "bg-gray-800/80" : "bg-[#e6e6e6]"}
+        bg-[var(--project-card-bg)] force-project
         ${isHovered ? "scale-[1.02]" : ""}`}
     >
       {/* Image Container */}
       <div
         ref={imageRef}
         className={`relative w-full p-2 rounded-lg mb-4
-          ${isDark ? "bg-[#4a4a4a]" : "bg-white"}`}
+          bg-[var(--project-image-bg)] force-project-image`}
       >
         <div className="relative w-full aspect-[16/10] rounded overflow-hidden">
           {project.image && (

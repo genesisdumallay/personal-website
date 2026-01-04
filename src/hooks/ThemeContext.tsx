@@ -31,6 +31,14 @@ export default function ThemeProvider({
     const stored = localStorage.getItem(THEME_STORAGE_KEY);
     if (stored !== null) {
       setIsDarkState(stored === "dark");
+    } else if (
+      typeof window !== "undefined" &&
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+    ) {
+      setIsDarkState(true);
+    } else {
+      setIsDarkState(false);
     }
     setIsHydrated(true);
   }, []);

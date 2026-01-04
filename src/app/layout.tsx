@@ -10,6 +10,7 @@ export const metadata = {
   icons: {
     icon: "/SiteTab.svg",
   },
+  colorScheme: "light dark",
 };
 
 export default function RootLayout({
@@ -18,7 +19,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" style={{ colorScheme: "light dark" }}>
+      <head>
+        <meta name="color-scheme" content="light dark" />
+      </head>
       <body>
         <InputBarProvider>
           <AgentProvider>

@@ -48,19 +48,13 @@ const Header = memo(function Header({ setToggleChat }: HeaderProps) {
     [handleExperienceClick]
   );
 
-  const linkClassName = `text-xs sm:text-sm md:text-base font-medium transition-colors ${
-    isDark ? "hover:text-blue-400" : "hover:text-blue-600"
-  }`;
+  const linkClassName = `text-xs sm:text-sm md:text-base font-medium transition-colors hover:text-[var(--nav-hover)]`;
 
-  const containerClassName = `flex items-center justify-center gap-3 sm:gap-6 border rounded w-max p-1 sm:p-2 mt-3 ${
-    isDark ? "border-gray-700" : "border-gray-300"
-  }`;
+  const containerClassName = `flex items-center justify-center gap-3 sm:gap-6 border rounded w-max p-1 sm:p-2 mt-3 border-[var(--input-border)]`;
 
   return (
     <div
-      className={`${
-        isDark ? "text-gray-200" : "text-gray-900"
-      } flex flex-row gap-2 w-full justify-center px-3 sm:px-6`}
+      className={`text-[var(--site-text)] flex flex-row gap-2 w-full justify-center px-3 sm:px-6`}
     >
       <div className={containerClassName}>
         <div className="flex items-center gap-2">
