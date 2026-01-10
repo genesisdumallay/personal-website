@@ -59,7 +59,6 @@ const ProjectCard = memo(function ProjectCard({
         bg-[var(--project-card-bg)] force-project
         ${isHovered ? "scale-[1.02]" : ""}`}
     >
-      {/* Image Container */}
       <div
         ref={imageRef}
         className={`relative w-full p-2 rounded-lg mb-4
@@ -78,7 +77,6 @@ const ProjectCard = memo(function ProjectCard({
         </div>
       </div>
 
-      {/* Project Info */}
       <div className="flex flex-col gap-2">
         <h3
           className={`text-lg font-medium ${
@@ -96,7 +94,6 @@ const ProjectCard = memo(function ProjectCard({
           {project.description}
         </p>
 
-        {/* Tags */}
         {project.tags && project.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">
             {project.tags.slice(0, 5).map((tag, idx) => (

@@ -10,6 +10,9 @@ export const metadata = {
   icons: {
     icon: "/SiteTab.svg",
   },
+};
+
+export const viewport = {
   colorScheme: "light dark",
 };
 
@@ -19,10 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" style={{ colorScheme: "light dark" }}>
-      <head>
-        <meta name="color-scheme" content="light dark" />
-      </head>
+    <html lang="en">
       <body>
         <InputBarProvider>
           <AgentProvider>

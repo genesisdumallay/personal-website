@@ -78,10 +78,13 @@ const FloatingPoints = memo(function FloatingPoints({
     const numParticles = isMobile ? 400 : 700;
     const sizeFactor = isMobile ? 0.55 : 1;
 
+    const virtualWidth = Math.max(width, 1200);
+    const virtualHeight = Math.max(height, 800);
+
     particlesRef.current = Array.from({ length: numParticles }, () => ({
-      x: (Math.random() - 0.5) * width * 2,
-      y: (Math.random() - 0.5) * height * 1.2,
-      z: Math.random() * width,
+      x: (Math.random() - 0.5) * virtualWidth * 2,
+      y: (Math.random() - 0.5) * virtualHeight * 1.2,
+      z: Math.random() * virtualWidth,
       radius: (Math.random() * 3 + 1.5) * sizeFactor,
     }));
   }, [isMobile]);
@@ -118,7 +121,7 @@ const FloatingPoints = memo(function FloatingPoints({
         animationRef.current = requestAnimationFrame(animate);
         return;
       }
-      
+
       ctx.clearRect(0, 0, width, height);
       ctx.fillStyle = backgroundColor;
       ctx.fillRect(0, 0, width, height);
@@ -150,9 +153,11 @@ const FloatingPoints = memo(function FloatingPoints({
 
         p.z -= 2 * speed;
         if (p.z < -width / 2) {
-          p.x = (Math.random() - 0.5) * width * 2;
-          p.y = (Math.random() - 0.5) * height * 1.2;
-          p.z = Math.max(width / 2, 1);
+          const virtualWidth = Math.max(width, 1200);
+          const virtualHeight = Math.max(height, 800);
+          p.x = (Math.random() - 0.5) * virtualWidth * 2;
+          p.y = (Math.random() - 0.5) * virtualHeight * 1.2;
+          p.z = Math.max(virtualWidth / 2, 1);
         }
 
         const scale = Math.max(300 / (p.z + 300), 0.1);

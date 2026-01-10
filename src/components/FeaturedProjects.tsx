@@ -80,7 +80,6 @@ const FeaturedProjects = memo(function FeaturedProjects() {
       }`}
     >
       <div className="w-full max-w-[48rem] mx-auto px-4 sm:px-6">
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2
             className={`text-2xl font-semibold ${
@@ -103,17 +102,14 @@ const FeaturedProjects = memo(function FeaturedProjects() {
           </Link> */}
         </div>
 
-        {/* Projects Container with edge fade */}
         <div
           className="relative"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
-          {/* Scrollable container with mask for edge fade */}
           <div
             ref={scrollContainerRef}
             className="flex items-center justify-center py-8"
-            // className="flex gap-6 overflow-x-hidden pb-4"
             style={{
               maskImage:
                 "linear-gradient(to right, transparent, black 20px, black calc(100% - 20px), transparent)",
@@ -128,7 +124,9 @@ const FeaturedProjects = memo(function FeaturedProjects() {
                 onNavigate={handleNavigate}
               />
             ))} */}
-            <p className="text-center italic">In development, i just want to tell you im working on it!</p>
+            <p className="text-center italic">
+              In development, i just want to tell you im working on it!
+            </p>
           </div>
         </div>
       </div>

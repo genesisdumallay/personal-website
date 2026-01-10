@@ -20,11 +20,11 @@ const AboutMe = memo(function AboutMe() {
     setShowSvg(true);
     setFadeOut(false);
 
-    fadeTimer.current = window.setTimeout(() => setFadeOut(true), 3000);
+    fadeTimer.current = window.setTimeout(() => setFadeOut(true), 2500);
     hideTimer.current = window.setTimeout(() => {
       setShowSvg(false);
       setFadeOut(false);
-    }, 3500);
+    }, 3000);
   }, []);
 
   useEffect(() => {
@@ -38,8 +38,7 @@ const AboutMe = memo(function AboutMe() {
     if (typeof window === "undefined") return;
 
     const link = document.createElement("link");
-    link.rel = "preload";
-    link.as = "image";
+    link.rel = "prefetch";
     link.href = FUN_FACT_IMAGE;
     document.head.appendChild(link);
 

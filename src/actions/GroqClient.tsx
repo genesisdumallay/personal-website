@@ -78,9 +78,7 @@ const streamGroqResponse = async (
             fullText += data.content;
             callbacks?.onChunk?.(data.content);
           }
-        } catch {
-          // Skip malformed SSE data
-        }
+        } catch {}
       }
     }
   } catch (err) {

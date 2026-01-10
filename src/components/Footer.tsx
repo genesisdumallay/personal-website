@@ -81,6 +81,9 @@ const Footer = memo(function Footer({
           <a
             key={it.id}
             href={it.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Open ${it.label} in new tab`}
             onMouseEnter={() => setHovered(it.id)}
             onMouseLeave={() => setHovered(null)}
             className={iconContainerClass}

@@ -83,16 +83,6 @@ const LandingPage = memo(function LandingPage({
   }, []);
 
   useEffect(() => {
-    const navigationEntries = performance.getEntriesByType(
-      "navigation"
-    ) as PerformanceNavigationTiming[];
-    const isReload =
-      navigationEntries.length > 0 && navigationEntries[0].type === "reload";
-
-    if (isReload) {
-      sessionStorage.removeItem("entrance_shown");
-    }
-
     const entranceShown = sessionStorage.getItem("entrance_shown");
 
     if (!entranceShown) {

@@ -194,7 +194,6 @@ export default function ProjectPage({
 
       <div className="pt-20 px-6">
         <div className="max-w-4xl mx-auto">
-          {/* Back button */}
           <button
             onClick={() => router.back()}
             className={`flex items-center gap-2 mb-8 ${
@@ -212,7 +211,6 @@ export default function ProjectPage({
             Back
           </button>
 
-          {/* Project Image Container */}
           {project.image && (
             <div
               ref={finalImageRef}
@@ -234,7 +232,6 @@ export default function ProjectPage({
             </div>
           )}
 
-          {/* Project Header */}
           <div
             className="flex flex-col gap-4 mb-8"
             style={{
@@ -266,7 +263,6 @@ export default function ProjectPage({
               )}
             </div>
 
-            {/* GitHub link */}
             {project.github && (
               <a
                 href={`https://github.com/${project.github.owner}/${project.github.repo}`}
@@ -283,7 +279,6 @@ export default function ProjectPage({
             )}
           </div>
 
-          {/* Description */}
           <div
             className="mb-8"
             style={{
@@ -302,7 +297,6 @@ export default function ProjectPage({
             </p>
           </div>
 
-          {/* Tags */}
           {project.tags && project.tags.length > 0 && (
             <div
               className="mb-8"

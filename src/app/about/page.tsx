@@ -44,7 +44,7 @@ export default function AboutPage() {
               className={`sm:ml-3 text-lg underline underline-offset-2 inline-flex items-center gap-1 cursor-pointer transition-colors ${
                 isDark
                   ? "text-blue-400 hover:text-blue-300"
-                  : "text-blue-600 hover:text-blue-700"
+                  : "text-gray-700 hover:text-gray-900"
               }`}
             >
               <FaReply className="text-[1.05rem]" />
@@ -71,15 +71,30 @@ export default function AboutPage() {
           </div>
 
           <div className="mt-6 flex justify-start">
-            <div className="rounded-lg overflow-hidden">
-              <Image
-                src="/cat.png"
-                alt="Cat"
-                width={320}
-                height={240}
-                className="object-contain shadow-md"
-                priority
-              />
+            <div className="relative w-full max-w-[320px]">
+              <div
+                className={`rounded-xl p-4 border overflow-hidden ${
+                  isDark
+                    ? "bg-[var(--card-bg)] border-gray-700"
+                    : "bg-[var(--card-bg)] border-gray-200"
+                }`}
+              >
+                <div className="rounded-md overflow-hidden bg-transparent">
+                  <div
+                    className="relative w-full"
+                    style={{ aspectRatio: "4 / 3" }}
+                  >
+                    <Image
+                      src="/cat.png"
+                      alt="Cat"
+                      fill
+                      sizes="(max-width: 320px) 100vw, 320px"
+                      className="object-contain"
+                      priority
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

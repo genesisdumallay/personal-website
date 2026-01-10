@@ -1,6 +1,5 @@
 import { Project } from "@/models/types";
 
-// Dummy projects data - will be replaced with MongoDB data later
 export const DUMMY_PROJECTS: Project[] = [
   {
     _id: "1",

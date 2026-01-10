@@ -34,7 +34,9 @@ const ExperienceCard = React.memo<ExperienceCardProps>(function ExperienceCard({
     }
   }, [isExpanded]);
 
-  const containerClass = `flex flex-col rounded-2xl md:rounded-3xl p-6 md:p-10 py-6 w-full min-h-[10rem] max-w-full overflow-hidden border border-transparent hover:border-gray-500 transition-transform transition-colors duration-150 ease-out bg-[var(--card-bg)] force-card`;
+  const containerClass = `flex flex-col rounded-2xl md:rounded-3xl p-6 md:p-10 py-6 w-full min-h-[10rem] max-w-full overflow-hidden border border-transparent hover:border-gray-500 transition-transform transition-colors duration-150 ease-out bg-[var(--card-bg)] force-card ${
+    onToggle ? "cursor-pointer" : ""
+  }`;
 
   return (
     <div

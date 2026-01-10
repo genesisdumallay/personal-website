@@ -49,7 +49,6 @@ export default function ProjectsPage() {
 
       <div className="pt-20 px-6">
         <div className="max-w-6xl mx-auto">
-          {/* Back button */}
           <button
             onClick={() => router.push("/")}
             className={`flex items-center gap-2 mb-8 ${
@@ -62,7 +61,6 @@ export default function ProjectsPage() {
             Back to Home
           </button>
 
-          {/* Header */}
           <div className="flex items-center gap-3 mb-8">
             <FaFolderOpen
               className={`text-2xl ${
@@ -78,7 +76,6 @@ export default function ProjectsPage() {
             </h1>
           </div>
 
-          {/* Projects Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project) => (
               <div key={project._id} className="flex justify-center">

@@ -84,8 +84,9 @@ const Header = memo(function Header({ setToggleChat }: HeaderProps) {
         </div>
       </div>
       <div className={containerClassName}>
-        {navItems.map((it) =>
-          it.onClick ? (
+        {navItems.map((it) => {
+          const isPdf = it.link.toLowerCase().endsWith(".pdf");
+          return it.onClick ? (
             <a
               key={it.id}
               href={it.link}
@@ -94,12 +95,23 @@ const Header = memo(function Header({ setToggleChat }: HeaderProps) {
             >
               {it.label}
             </a>
+          ) : isPdf ? (
+            <Link
+              key={it.id}
+              href={it.link}
+              prefetch={false}
+              className={linkClassName}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {it.label}
+            </Link>
           ) : (
             <Link key={it.id} href={it.link} className={linkClassName}>
               {it.label}
             </Link>
-          )
-        )}
+          );
+        })}
 
         <button
           className={`border-l px-2 sm:px-3 py-1 text-xs sm:text-sm transition-colors cursor-pointer ${

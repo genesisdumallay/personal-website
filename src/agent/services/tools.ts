@@ -81,7 +81,6 @@ export const toolsImplementation: Record<string, ToolFunction> = {
   },
   sendContactMessage: (args: unknown) => {
     const { message, email } = args as SendContactMessageArgs;
-    // Mock sending an email
     console.log(`[MOCK EMAIL] To: Owner, From: ${email}, Body: ${message}`);
     return { success: true, message: "Message queued for delivery." };
   },
