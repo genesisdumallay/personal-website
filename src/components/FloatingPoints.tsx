@@ -38,7 +38,6 @@ const FloatingPoints = memo(function FloatingPoints({
   const isMouseMovingRef = useRef(false);
   const mouseMoveTimeout = useRef<number | null>(null);
   const dimensionsRef = useRef({ width: 0, height: 0, dpr: 1 });
-  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -63,13 +62,9 @@ const FloatingPoints = memo(function FloatingPoints({
 
     const dpr = Math.min(window.devicePixelRatio, 2);
     const width = window.innerWidth || document.documentElement.clientWidth;
-    const height = Math.max(
-      document.documentElement.scrollHeight,
-      document.documentElement.clientHeight
-    );
+    const height = window.innerHeight;
 
     dimensionsRef.current = { width, height, dpr };
-    setCanvasSize({ width, height });
 
     canvas.width = Math.max(1, Math.floor(width * dpr));
     canvas.height = Math.max(1, Math.floor(height * dpr));
@@ -81,21 +76,28 @@ const FloatingPoints = memo(function FloatingPoints({
     const virtualWidth = Math.max(width, 1200);
     const virtualHeight = Math.max(height, 800);
 
-    particlesRef.current = Array.from({ length: numParticles }, () => ({
-      x: (Math.random() - 0.5) * virtualWidth * 2,
-      y: (Math.random() - 0.5) * virtualHeight * 1.2,
-      z: Math.random() * virtualWidth,
-      radius: (Math.random() * 3 + 1.5) * sizeFactor,
-    }));
+    if (particlesRef.current.length !== numParticles) {
+      particlesRef.current = Array.from({ length: numParticles }, () => ({
+        x: (Math.random() - 0.5) * virtualWidth * 2,
+        y: (Math.random() - 0.5) * virtualHeight * 1.2,
+        z: Math.random() * virtualWidth,
+        radius: (Math.random() * 3 + 1.5) * sizeFactor,
+      }));
+    }
   }, [isMobile]);
 
   useEffect(() => {
     resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
-    window.addEventListener("scroll", resizeCanvas, { passive: true });
+    let resizeTimer: number;
+    const handleResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(resizeCanvas, 200);
+    };
+
+    window.addEventListener("resize", handleResize);
     return () => {
-      window.removeEventListener("resize", resizeCanvas);
-      window.removeEventListener("scroll", resizeCanvas);
+      window.removeEventListener("resize", handleResize);
+      clearTimeout(resizeTimer);
     };
   }, [resizeCanvas]);
 
@@ -108,6 +110,41 @@ const FloatingPoints = memo(function FloatingPoints({
     () => (isDark ? "#1e2030" : "rgba(255,255,255,0.6)"),
     [isDark]
   );
+
+  const particleSpriteRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const sprite = document.createElement("canvas");
+    sprite.width = 128;
+    sprite.height = 128;
+    const sCtx = sprite.getContext("2d");
+    if (sCtx) {
+      const half = 64;
+      const gradient = sCtx.createRadialGradient(
+        half,
+        half,
+        0,
+        half,
+        half,
+        half
+      );
+      gradient.addColorStop(0, particleColors.core);
+      gradient.addColorStop(0.2, particleColors.mid);
+      gradient.addColorStop(1, particleColors.outer);
+
+      sCtx.fillStyle = gradient;
+      sCtx.beginPath();
+      sCtx.arc(
+        half,
+        half,
+        half / particleColors.glowMultiplier,
+        0,
+        Math.PI * 2
+      );
+      sCtx.fill();
+    }
+    particleSpriteRef.current = sprite;
+  }, [particleColors]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -163,28 +200,22 @@ const FloatingPoints = memo(function FloatingPoints({
         const scale = Math.max(300 / (p.z + 300), 0.1);
         const screenX = p.x * scale + width / 2;
         const screenY = p.y * scale + height / 2;
-        let size = Math.max(p.radius * scale, 0.1);
-        if (p.z > width * 0.4) size *= 1.5;
+        let pSize = Math.max(p.radius * scale, 0.1);
+        if (p.z > width * 0.4) pSize *= 1.5;
 
-        if (!isFinite(screenX) || !isFinite(screenY) || !isFinite(size))
+        if (!isFinite(screenX) || !isFinite(screenY) || !isFinite(pSize))
           continue;
 
-        const gradient = ctx.createRadialGradient(
-          screenX,
-          screenY,
-          0,
-          screenX,
-          screenY,
-          size * colors.glowMultiplier
-        );
-        gradient.addColorStop(0, colors.core);
-        gradient.addColorStop(0.2, colors.mid);
-        gradient.addColorStop(1, colors.outer);
-
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
-        ctx.fillStyle = gradient;
-        ctx.fill();
+        if (particleSpriteRef.current) {
+          const drawSize = pSize * particleColors.glowMultiplier;
+          ctx.drawImage(
+            particleSpriteRef.current,
+            Math.floor(screenX - drawSize),
+            Math.floor(screenY - drawSize),
+            Math.floor(drawSize * 2),
+            Math.floor(drawSize * 2)
+          );
+        }
       }
 
       animationRef.current = requestAnimationFrame(animate);
@@ -223,7 +254,12 @@ const FloatingPoints = memo(function FloatingPoints({
 
   useEffect(() => {
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      if (mouseMoveTimeout.current !== null) {
+        clearTimeout(mouseMoveTimeout.current);
+      }
+    };
   }, [handleMouseMove]);
 
   return (
@@ -234,7 +270,7 @@ const FloatingPoints = memo(function FloatingPoints({
         top: 0,
         left: 0,
         width: "100%",
-        height: canvasSize.height ? `${canvasSize.height}px` : "100%",
+        height: "100vh",
         pointerEvents: "none",
         zIndex: -10,
       }}
