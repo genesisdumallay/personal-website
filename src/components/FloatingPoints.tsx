@@ -76,14 +76,12 @@ const FloatingPoints = memo(function FloatingPoints({
     const virtualWidth = Math.max(width, 1200);
     const virtualHeight = Math.max(height, 800);
 
-    if (particlesRef.current.length !== numParticles) {
-      particlesRef.current = Array.from({ length: numParticles }, () => ({
-        x: (Math.random() - 0.5) * virtualWidth * 2,
-        y: (Math.random() - 0.5) * virtualHeight * 1.2,
-        z: Math.random() * virtualWidth,
-        radius: (Math.random() * 3 + 1.5) * sizeFactor,
-      }));
-    }
+    particlesRef.current = Array.from({ length: numParticles }, () => ({
+      x: (Math.random() - 0.5) * virtualWidth * 2,
+      y: (Math.random() - 0.5) * virtualHeight * 1.2,
+      z: Math.random() * virtualWidth,
+      radius: (Math.random() * 3 + 1.5) * sizeFactor,
+    }));
   }, [isMobile]);
 
   useEffect(() => {
@@ -210,10 +208,10 @@ const FloatingPoints = memo(function FloatingPoints({
           const drawSize = pSize * particleColors.glowMultiplier;
           ctx.drawImage(
             particleSpriteRef.current,
-            Math.floor(screenX - drawSize),
-            Math.floor(screenY - drawSize),
-            Math.floor(drawSize * 2),
-            Math.floor(drawSize * 2)
+            screenX - drawSize,
+            screenY - drawSize,
+            drawSize * 2,
+            drawSize * 2
           );
         }
       }
