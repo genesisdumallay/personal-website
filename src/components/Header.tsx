@@ -36,7 +36,11 @@ const Header = memo(function Header({ setToggleChat }: HeaderProps) {
 
   const navItems: NavItem[] = useMemo(
     () => [
-      { id: "resume", link: "/DumallayGenesis.pdf", label: "Resume" },
+      {
+        id: "resume",
+        link: "/Genesis_Dumallay_Software_Engineer_2026.pdf",
+        label: "Resume",
+      },
       { id: "aboutme", link: "/about", label: "About" },
       {
         id: "experience",
