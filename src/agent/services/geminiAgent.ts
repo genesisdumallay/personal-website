@@ -36,7 +36,7 @@ const RATE_LIMIT_KEYWORDS = [
 
 const FALLBACK_MODEL = "gemini-2.5-flash";
 const DEFAULT_MODEL = "gemini-2.5-flash-lite";
-const MAX_HISTORY_LENGTH = 5; 
+const MAX_HISTORY_LENGTH = 5;
 export class GeminiAgent {
   private chat: Chat;
   private tools: Record<string, ToolImplementation>;
@@ -75,14 +75,52 @@ export class GeminiAgent {
   private switchModel(): void {
     this.currentModel =
       this.currentModel === DEFAULT_MODEL ? FALLBACK_MODEL : DEFAULT_MODEL;
+  }
 
-    this.chat = this.createChat(true);
+  private resetToDefaultModel(): void {
+    this.currentModel = DEFAULT_MODEL;
   }
 
   private isRateLimitError(error: unknown): boolean {
-    if (!(error instanceof Error)) return false;
+    let errorMessage = "";
 
-    const errorMessage = error.message.toLowerCase();
+    if (error instanceof Error) {
+      errorMessage = error.message.toLowerCase();
+      if (error.name) {
+        errorMessage += " " + error.name.toLowerCase();
+      }
+      if ((error as Error & { cause?: unknown }).cause) {
+        const cause = (error as Error & { cause?: unknown }).cause;
+        if (typeof cause === "string") {
+          errorMessage += " " + cause.toLowerCase();
+        } else if (cause instanceof Error) {
+          errorMessage += " " + cause.message.toLowerCase();
+        }
+      }
+    } else if (typeof error === "object" && error !== null) {
+      const errorObj = error as Record<string, unknown>;
+      if (errorObj.message && typeof errorObj.message === "string") {
+        errorMessage += errorObj.message.toLowerCase();
+      }
+      if (errorObj.error && typeof errorObj.error === "string") {
+        errorMessage += " " + errorObj.error.toLowerCase();
+      }
+      if (errorObj.status && typeof errorObj.status === "number") {
+        errorMessage += " " + errorObj.status.toString();
+      }
+      if (errorObj.code && typeof errorObj.code === "string") {
+        errorMessage += " " + errorObj.code.toLowerCase();
+      }
+      try {
+        errorMessage += " " + JSON.stringify(error).toLowerCase();
+      } catch {
+      }
+    } else if (typeof error === "string") {
+      errorMessage = error.toLowerCase();
+    }
+
+    if (!errorMessage) return false;
+
     return RATE_LIMIT_KEYWORDS.some((keyword) =>
       errorMessage.includes(keyword)
     );
@@ -115,21 +153,44 @@ export class GeminiAgent {
     message: string,
     onToolStart?: (name: string, args: unknown) => Promise<void> | void
   ): Promise<string | undefined> {
-    this.addToHistory("user", message);
+    this.resetToDefaultModel();
+    this.chat = this.createChat(true);
 
     let response: ChatResponse;
 
     try {
+      console.log(
+        `[GeminiAgent] Sending message with model: ${this.currentModel}`
+      );
       response = await this.chat.sendMessage({ message });
     } catch (error) {
-      if (!this.isRateLimitError(error)) throw error;
+      console.log(`[GeminiAgent] Error with ${this.currentModel}:`, error);
 
+      if (!this.isRateLimitError(error)) {
+        console.log(`[GeminiAgent] Not a rate limit error, throwing`);
+        throw error;
+      }
+
+      console.log(
+        `[GeminiAgent] Rate limit detected, switching to fallback model`
+      );
       this.switchModel();
+      this.chat = this.createChat(true);
+      console.log(
+        `[GeminiAgent] Now using fallback model: ${this.currentModel}`
+      );
 
       try {
         response = await this.chat.sendMessage({ message });
+        console.log(`[GeminiAgent] Retry successful with ${this.currentModel}`);
       } catch (retryError) {
+        console.log(
+          `[GeminiAgent] Retry error with ${this.currentModel}:`,
+          retryError
+        );
+
         if (this.isRateLimitError(retryError)) {
+          console.log(`[GeminiAgent] Both models rate limited`);
           throw new Error(
             "Both models are currently rate limited. Please try again in a few moments."
           );
@@ -137,6 +198,8 @@ export class GeminiAgent {
         throw retryError;
       }
     }
+
+    this.addToHistory("user", message);
 
     let turnCount = 0;
 
@@ -190,10 +253,15 @@ export class GeminiAgent {
         });
       } catch (error) {
         if (this.isRateLimitError(error)) {
-          this.switchModel();
-          response = await this.chat.sendMessage({
-            message: functionResponseParts,
-          });
+          // Mid-conversation rate limit during tool execution
+          // We cannot seamlessly switch models here because the new chat
+          // won't have context of the tool call. Log and throw a user-friendly error.
+          console.log(
+            `[GeminiAgent] Rate limit during tool execution, cannot switch models mid-conversation`
+          );
+          throw new Error(
+            "I'm currently experiencing high demand. Please try your request again in a moment."
+          );
         } else {
           console.error("[GeminiAgent] Error during tool execution:", error);
           throw error;

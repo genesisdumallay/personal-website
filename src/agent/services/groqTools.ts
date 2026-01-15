@@ -1,6 +1,18 @@
-import { FunctionDeclaration, Type } from "@google/genai";
 import { Project } from "../../models/types";
-import getAboutMe from "@/actions/getAboutMe";
+
+// Tool definitions in JSON Schema format for Groq API
+export interface GroqToolDefinition {
+  type: "function";
+  function: {
+    name: string;
+    description: string;
+    parameters: {
+      type: "object";
+      properties: Record<string, unknown>;
+      required?: string[];
+    };
+  };
+}
 
 const PORTFOLIO_DATA: Project[] = [
   {
@@ -15,7 +27,7 @@ const PORTFOLIO_DATA: Project[] = [
       "React",
     ],
     description: `An ai-powered chatbot that answers questions with the company handbook as the knowledge base. 
-      It uses retrieval augmented generation to query relevant information. With prompt engineering tehchniques,
+      It uses retrieval augmented generation to query relevant information. With prompt engineering techniques,
       the chatbot's behavior is optimized to provide accurate and helpful responses based on the handbook content.`,
   },
   {
@@ -32,7 +44,7 @@ const PORTFOLIO_DATA: Project[] = [
 ];
 
 const CONTACT_INFO = {
-  email: "gmdumallay007101@.gmail.com",
+  email: "gmdumallay007101@gmail.com",
   github: "github.com/genesisdumallay",
   linkedin: "linkedin.com/in/genesisdumallay",
   phonenumber: "+639777364652",
@@ -62,7 +74,7 @@ interface SendContactMessageArgs {
 
 type ToolFunction = (args: unknown) => unknown;
 
-export const toolsImplementation: Record<string, ToolFunction> = {
+export const groqToolsImplementation: Record<string, ToolFunction> = {
   getProjects: () => {
     return PORTFOLIO_DATA;
   },
@@ -86,67 +98,83 @@ export const toolsImplementation: Record<string, ToolFunction> = {
   },
 };
 
-export const toolDeclarations: FunctionDeclaration[] = [
+// Tool declarations in Groq format (JSON Schema)
+export const groqToolDeclarations: GroqToolDefinition[] = [
   {
-    name: "getProjects",
-    description:
-      "Retrieves all projects in Genesis's portfolio. Use this when the user asks about projects, work, works, portfolio, what he has built, or what he has worked on.",
-    parameters: {
-      type: Type.OBJECT,
-      properties: {},
-    },
-  },
-  {
-    name: "getProjectByTech",
-    description:
-      "Searches for projects that use a specific technology (e.g., React, Python). Use this when the user asks for specific tech stack experience.",
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        tech: {
-          type: Type.STRING,
-          description:
-            "The technology to filter by (e.g., 'React', 'TypeScript').",
-        },
+    type: "function",
+    function: {
+      name: "getProjects",
+      description:
+        "Retrieves all projects in Genesis's portfolio. Use this when the user asks about projects, work, works, portfolio, what he has built, or what he has worked on.",
+      parameters: {
+        type: "object",
+        properties: {},
       },
-      required: ["tech"],
     },
   },
   {
-    name: "getAboutMe",
-    description:
-      "Retrieves Genesis's personal information including his name, age, work background, and personal interests (like hobbies, interests outside work). Use this for questions about who Genesis is, his background, interests, or hobbies.",
-    parameters: {
-      type: Type.OBJECT,
-      properties: {},
-    },
-  },
-  {
-    name: "getContactInfo",
-    description:
-      "Retrieves public contact information like email, GitHub, and LinkedIn profiles.",
-    parameters: {
-      type: Type.OBJECT,
-      properties: {},
-    },
-  },
-  {
-    name: "sendContactMessage",
-    description:
-      "Sends a message to the developer. Use this when the user explicitly wants to send a message or contact the developer directly.",
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        email: {
-          type: Type.STRING,
-          description: "The user's email address for reply.",
+    type: "function",
+    function: {
+      name: "getProjectByTech",
+      description:
+        "Searches for projects that use a specific technology (e.g., React, Python). Use this when the user asks for specific tech stack experience.",
+      parameters: {
+        type: "object",
+        properties: {
+          tech: {
+            type: "string",
+            description:
+              "The technology to filter by (e.g., 'React', 'TypeScript').",
+          },
         },
-        message: {
-          type: Type.STRING,
-          description: "The body of the message to send.",
-        },
+        required: ["tech"],
       },
-      required: ["email", "message"],
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getAboutMe",
+      description:
+        "Retrieves Genesis's personal information including his name, age, work background, and personal interests (like hobbies, interests outside work). Use this for questions about who Genesis is, his background, interests, or hobbies.",
+      parameters: {
+        type: "object",
+        properties: {},
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getContactInfo",
+      description:
+        "Retrieves public contact information like email, GitHub, and LinkedIn profiles.",
+      parameters: {
+        type: "object",
+        properties: {},
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "sendContactMessage",
+      description:
+        "Sends a message to the developer. Use this when the user explicitly wants to send a message or contact the developer directly.",
+      parameters: {
+        type: "object",
+        properties: {
+          email: {
+            type: "string",
+            description: "The user's email address for reply.",
+          },
+          message: {
+            type: "string",
+            description: "The body of the message to send.",
+          },
+        },
+        required: ["email", "message"],
+      },
     },
   },
 ];

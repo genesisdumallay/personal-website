@@ -37,6 +37,8 @@ const InputBar = ({
       value={value}
       onChange={(e) => setValue(e.target.value)}
       onKeyDown={handleKeyDown}
+      onClick={() => setToggleChat && setToggleChat(true)}
+      onFocus={() => setToggleChat && setToggleChat(true)}
       placeholder={placeholder ?? "Type here..."}
       aria-label="main-input"
       className={`max-w-[48rem] w-full p-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors mb-6 bg-[var(--input-bg)] border-[var(--input-border)] text-[var(--input-text)] placeholder-[var(--input-placeholder)] force-input ${className}`}

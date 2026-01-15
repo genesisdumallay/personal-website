@@ -1,5 +1,6 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { ChatMessage, MessageRole, ToolExecutionStatus } from "../models/types";
+import { GroqAgent } from "../agent/services/groqAgent";
 import {
   getHistory,
   saveMessage,
@@ -20,13 +21,13 @@ CRITICAL - ANTI-HALLUCINATION RULES:
 
 Key guidelines:
 - You speak ABOUT Genesis in third person (e.g., "Genesis has experience in...", "He worked on..."). Never speak AS Genesis (avoid "I am Genesis" or "My experience").
-- Use the available tools to retrieve accurate information about Genesis's background, projects, and experiences.
+- You have access to tools that are automatically called by the system. You do NOT write or type function calls - the system handles that for you.
 - When you call a tool and get results, extract and share ONLY the specific information relevant to the user's question. Don't dump all the data - be selective and conversational.
 - Communicate naturally and conversationally. Avoid robotic phrases like "based on the retrieved information" or "according to the data". Simply present information as if you're knowledgeable about Genesis.
 - Be warm and welcoming. Simple greetings like "hi", "hello", or casual conversation starters are perfectly fine - respond naturally before offering to help with information about Genesis.
 - Only politely decline if users ask about topics completely unrelated to Genesis, his work, skills, projects, or professional background. Use your judgment - if it could reasonably relate to understanding Genesis's profile, engage with it.
 - If a tool doesn't return expected information, say you couldn't find that specific information and offer to help with something else.
-- NEVER output raw function calls, code, or XML-like syntax in your responses. Always use tools properly and speak naturally.
+- NEVER type out function calls like "<function=name>" or "function()" or any code-like syntax in your responses. Your responses should be natural human language only. Tools are invoked automatically by the system, not by you typing them.
 
 Your purpose is to help visitors learn about Genesis M. Dumallay in a natural, engaging way - but ONLY using factual information from the tools.`;
 
@@ -71,7 +72,7 @@ const createChatMessage = (
   timestamp: new Date(),
 });
 
-export const useAgent = () => {
+export const useGroqAgent = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [toolStatus, setToolStatus] = useState<ToolExecutionStatus>({
@@ -83,13 +84,23 @@ export const useAgent = () => {
     if (initial.length > 0) setMessages(initial);
   }, []);
 
+  const agentRef = useRef<GroqAgent | null>(null);
+
+  const initializeAgent = useCallback(() => {
+    if (!agentRef.current) {
+      agentRef.current = new GroqAgent({
+        systemInstruction: SYSTEM_INSTRUCTION,
+      });
+    }
+  }, []);
+
   const addMessage = useCallback((message: ChatMessage) => {
     setMessages((prev) => [...prev, message]);
   }, []);
 
   const handleToolExecution = useCallback(
     async (name: string, args: unknown) => {
-      console.log(`[Agent] Tool triggered: ${name}`, args);
+      console.log(`[GroqAgent Hook] Tool triggered: ${name}`, args);
       setToolStatus({ isExecuting: true, toolName: name });
       await new Promise((resolve) => setTimeout(resolve, TOOL_EXECUTION_DELAY));
     },
@@ -117,7 +128,7 @@ export const useAgent = () => {
 
   const handleError = useCallback(
     (err: unknown) => {
-      console.error("Chat Error:", err);
+      console.error("Groq Chat Error:", err);
       const errorMsg = createChatMessage(
         MessageRole.SYSTEM,
         ERROR_MESSAGES.PROCESSING_ERROR
@@ -133,30 +144,23 @@ export const useAgent = () => {
       const trimmedText = userText.trim();
       if (!trimmedText) return;
 
+      try {
+        initializeAgent();
+      } catch (error) {
+        handleError(error);
+        return;
+      }
+
       const newUserMsg = createChatMessage(MessageRole.USER, trimmedText);
       addMessage(newUserMsg);
       saveMessage({ role: "user", content: trimmedText });
       setIsProcessing(true);
 
       try {
-        setToolStatus({ isExecuting: true, toolName: "Thinking" });
-
-        const response = await fetch("/api/gemini-agent", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message: trimmedText,
-            systemInstruction: SYSTEM_INSTRUCTION,
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || `API error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        const responseText = data.response;
+        const responseText = await agentRef.current!.sendMessage(
+          trimmedText,
+          handleToolExecution
+        );
 
         if (responseText) {
           handleSuccessResponse(responseText);
@@ -170,12 +174,20 @@ export const useAgent = () => {
         setToolStatus({ isExecuting: false });
       }
     },
-    [addMessage, handleSuccessResponse, handleEmptyResponse, handleError]
+    [
+      initializeAgent,
+      addMessage,
+      handleToolExecution,
+      handleSuccessResponse,
+      handleEmptyResponse,
+      handleError,
+    ]
   );
 
   const clearMessages = useCallback(() => {
     setMessages([]);
     clearHistory();
+    agentRef.current?.clearHistory();
   }, []);
 
   return useMemo(
